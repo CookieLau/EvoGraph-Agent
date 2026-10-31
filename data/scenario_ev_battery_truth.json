@@ -1,0 +1,643 @@
+{
+  "nodes": {
+    "HOLDING:TSLA": {
+      "name": "Tesla Inc.",
+      "tier": "Portfolio_Holding",
+      "exposure": 15200000.0,
+      "currency": "USD",
+      "status": "ACTIVE"
+    },
+    "HOLDING:BYD": {
+      "name": "BYD Co. Ltd",
+      "tier": "Portfolio_Holding",
+      "exposure": 2400000.0,
+      "currency": "USD",
+      "status": "ACTIVE"
+    },
+    "HOLDING:PANASONIC": {
+      "name": "Panasonic Energy's Kansas Plant",
+      "tier": "Portfolio_Holding",
+      "exposure": 3100000000.0,
+      "currency": "JPY",
+      "status": "ACTIVE"
+    },
+    "SUP:CATL": {
+      "name": "CATL Ningde Gigafactory",
+      "tier": "Tier1_CellMaker",
+      "exposure": 750000.0,
+      "currency": "USD",
+      "status": "ACTIVE"
+    },
+    "SUP:LGES": {
+      "name": "LG Energy Solution's Ochang Plant",
+      "tier": "Tier1_CellMaker",
+      "exposure": 6300000.0,
+      "currency": "EUR",
+      "status": "ACTIVE"
+    },
+    "SUP:ECOPRO": {
+      "name": "EcoPro BM",
+      "tier": "Tier2_Cathode",
+      "exposure": 4100000.0,
+      "currency": "USD",
+      "status": "ACTIVE"
+    },
+    "SUP:UMICORE": {
+      "name": "Umicore Cathode Materials",
+      "tier": "Tier2_Cathode",
+      "exposure": 1200.0,
+      "currency": null,
+      "status": "ACTIVE"
+    },
+    "SUP:SUMITOMO": {
+      "name": "Sumitomo Metal Mining 'NCA' Line",
+      "tier": "Tier2_Cathode",
+      "exposure": 850000000.0,
+      "currency": "JPY",
+      "status": "ACTIVE"
+    },
+    "SUP:GANFENG": {
+      "name": "Ganfeng Lithium Refinery",
+      "tier": "Tier3_Refiner",
+      "exposure": 3300000.0,
+      "currency": "USD",
+      "status": "ACTIVE"
+    },
+    "SUP:HUAYOU": {
+      "name": "Zhejiang Huayou Cobalt's Refinery",
+      "tier": "Tier3_Refiner",
+      "exposure": 2050000.0,
+      "currency": "EUR",
+      "status": "WARNING"
+    },
+    "SUP:KINGS_MTN": {
+      "name": "Albemarle's Kings Mountain",
+      "tier": "Tier3_Refiner",
+      "exposure": 1800000.0,
+      "currency": "USD",
+      "status": "WARNING"
+    },
+    "RAW:ATACAMA_LI": {
+      "name": "SQM Salar de Atacama Brine (Chile)",
+      "tier": "Tier4_RawMaterial",
+      "exposure": 950000.0,
+      "currency": "USD",
+      "status": "ACTIVE"
+    },
+    "RAW:GREENBUSHES": {
+      "name": "Greenbushes Spodumene",
+      "tier": "Tier4_RawMaterial",
+      "exposure": 640000.0,
+      "currency": "USD",
+      "status": "ACTIVE"
+    },
+    "RAW:DRC_COBALT": {
+      "name": "Kolwezi Cobalt Mine (DRC)",
+      "tier": "Tier4_RawMaterial",
+      "exposure": 0.0,
+      "currency": null,
+      "status": "SANCTION_OR_FORCE_MAJEURE"
+    },
+    "RAW:INDONESIA_NI": {
+      "name": "Weda Bay Nickel Laterite (Indonesia)",
+      "tier": "Tier4_RawMaterial",
+      "exposure": 2200000.0,
+      "currency": "USD",
+      "status": "ACTIVE"
+    }
+  },
+  "edges": {
+    "RAW:ATACAMA_LI->SUP:GANFENG": {
+      "rel": "SUPPLIES_LITHIUM_BRINE",
+      "weight": 0.97
+    },
+    "RAW:ATACAMA_LI->SUP:KINGS_MTN": {
+      "rel": "SUPPLIES_LITHIUM_BRINE",
+      "weight": 0.66
+    },
+    "RAW:GREENBUSHES->SUP:GANFENG": {
+      "rel": "SUPPLIES_SPODUMENE",
+      "weight": 0.72
+    },
+    "RAW:GREENBUSHES->SUP:KINGS_MTN": {
+      "rel": "SUPPLIES_SPODUMENE",
+      "weight": 0.8
+    },
+    "RAW:DRC_COBALT->SUP:HUAYOU": {
+      "rel": "SUPPLIES_COBALT_HYDROXIDE",
+      "weight": 0.99
+    },
+    "RAW:INDONESIA_NI->SUP:HUAYOU": {
+      "rel": "SUPPLIES_NICKEL",
+      "weight": 0.61
+    },
+    "SUP:GANFENG->SUP:ECOPRO": {
+      "rel": "SUPPLIES_LITHIUM_HYDROXIDE",
+      "weight": 0.85
+    },
+    "SUP:KINGS_MTN->SUP:UMICORE": {
+      "rel": "SUPPLIES_LITHIUM_HYDROXIDE",
+      "weight": 0.74
+    },
+    "SUP:HUAYOU->SUP:ECOPRO": {
+      "rel": "SUPPLIES_PRECURSOR",
+      "weight": 0.9
+    },
+    "SUP:HUAYOU->SUP:UMICORE": {
+      "rel": "SUPPLIES_PRECURSOR",
+      "weight": 0.7
+    },
+    "SUP:HUAYOU->SUP:SUMITOMO": {
+      "rel": "SUPPLIES_PRECURSOR",
+      "weight": 0.55
+    },
+    "SUP:ECOPRO->SUP:LGES": {
+      "rel": "SUPPLIES_CATHODE",
+      "weight": 0.88
+    },
+    "SUP:UMICORE->SUP:CATL": {
+      "rel": "SUPPLIES_CATHODE",
+      "weight": 0.64
+    },
+    "SUP:SUMITOMO->HOLDING:PANASONIC": {
+      "rel": "SUPPLIES_CATHODE",
+      "weight": 0.95
+    },
+    "SUP:ECOPRO->SUP:CATL": {
+      "rel": "SUPPLIES_CATHODE",
+      "weight": 0.5
+    },
+    "SUP:LGES->HOLDING:TSLA": {
+      "rel": "SUPPLIES_CELLS",
+      "weight": 0.78
+    },
+    "SUP:CATL->HOLDING:TSLA": {
+      "rel": "SUPPLIES_CELLS",
+      "weight": 0.83
+    },
+    "SUP:CATL->HOLDING:BYD": {
+      "rel": "SUPPLIES_CELLS",
+      "weight": 0.35
+    }
+  },
+  "expected_contagion": [
+    {
+      "path": [
+        "RAW:DRC_COBALT",
+        "SUP:HUAYOU",
+        "SUP:ECOPRO",
+        "SUP:LGES",
+        "HOLDING:TSLA"
+      ],
+      "names": [
+        "Kolwezi Cobalt Mine (DRC)",
+        "Zhejiang Huayou Cobalt's Refinery",
+        "EcoPro BM",
+        "LG Energy Solution's Ochang Plant",
+        "Tesla Inc."
+      ],
+      "contagion": 0.611582,
+      "holding": "HOLDING:TSLA",
+      "exposure": 15200000.0,
+      "currency": "USD",
+      "at_risk": 9296052.48
+    },
+    {
+      "path": [
+        "RAW:ATACAMA_LI",
+        "SUP:GANFENG",
+        "SUP:ECOPRO",
+        "SUP:LGES",
+        "HOLDING:TSLA"
+      ],
+      "names": [
+        "SQM Salar de Atacama Brine (Chile)",
+        "Ganfeng Lithium Refinery",
+        "EcoPro BM",
+        "LG Energy Solution's Ochang Plant",
+        "Tesla Inc."
+      ],
+      "contagion": 0.565937,
+      "holding": "HOLDING:TSLA",
+      "exposure": 15200000.0,
+      "currency": "USD",
+      "at_risk": 8602239.36
+    },
+    {
+      "path": [
+        "RAW:DRC_COBALT",
+        "SUP:HUAYOU",
+        "SUP:SUMITOMO",
+        "HOLDING:PANASONIC"
+      ],
+      "names": [
+        "Kolwezi Cobalt Mine (DRC)",
+        "Zhejiang Huayou Cobalt's Refinery",
+        "Sumitomo Metal Mining 'NCA' Line",
+        "Panasonic Energy's Kansas Plant"
+      ],
+      "contagion": 0.517275,
+      "holding": "HOLDING:PANASONIC",
+      "exposure": 3100000000.0,
+      "currency": "JPY",
+      "at_risk": 1603552500.0
+    },
+    {
+      "path": [
+        "RAW:GREENBUSHES",
+        "SUP:GANFENG",
+        "SUP:ECOPRO",
+        "SUP:LGES",
+        "HOLDING:TSLA"
+      ],
+      "names": [
+        "Greenbushes Spodumene",
+        "Ganfeng Lithium Refinery",
+        "EcoPro BM",
+        "LG Energy Solution's Ochang Plant",
+        "Tesla Inc."
+      ],
+      "contagion": 0.420077,
+      "holding": "HOLDING:TSLA",
+      "exposure": 15200000.0,
+      "currency": "USD",
+      "at_risk": 6385167.36
+    },
+    {
+      "path": [
+        "RAW:INDONESIA_NI",
+        "SUP:HUAYOU",
+        "SUP:ECOPRO",
+        "SUP:LGES",
+        "HOLDING:TSLA"
+      ],
+      "names": [
+        "Weda Bay Nickel Laterite (Indonesia)",
+        "Zhejiang Huayou Cobalt's Refinery",
+        "EcoPro BM",
+        "LG Energy Solution's Ochang Plant",
+        "Tesla Inc."
+      ],
+      "contagion": 0.376834,
+      "holding": "HOLDING:TSLA",
+      "exposure": 15200000.0,
+      "currency": "USD",
+      "at_risk": 5727870.72
+    },
+    {
+      "path": [
+        "RAW:DRC_COBALT",
+        "SUP:HUAYOU",
+        "SUP:ECOPRO",
+        "SUP:CATL",
+        "HOLDING:TSLA"
+      ],
+      "names": [
+        "Kolwezi Cobalt Mine (DRC)",
+        "Zhejiang Huayou Cobalt's Refinery",
+        "EcoPro BM",
+        "CATL Ningde Gigafactory",
+        "Tesla Inc."
+      ],
+      "contagion": 0.369765,
+      "holding": "HOLDING:TSLA",
+      "exposure": 15200000.0,
+      "currency": "USD",
+      "at_risk": 5620428.0
+    },
+    {
+      "path": [
+        "RAW:DRC_COBALT",
+        "SUP:HUAYOU",
+        "SUP:UMICORE",
+        "SUP:CATL",
+        "HOLDING:TSLA"
+      ],
+      "names": [
+        "Kolwezi Cobalt Mine (DRC)",
+        "Zhejiang Huayou Cobalt's Refinery",
+        "Umicore Cathode Materials",
+        "CATL Ningde Gigafactory",
+        "Tesla Inc."
+      ],
+      "contagion": 0.368122,
+      "holding": "HOLDING:TSLA",
+      "exposure": 15200000.0,
+      "currency": "USD",
+      "at_risk": 5595448.32
+    },
+    {
+      "path": [
+        "RAW:ATACAMA_LI",
+        "SUP:GANFENG",
+        "SUP:ECOPRO",
+        "SUP:CATL",
+        "HOLDING:TSLA"
+      ],
+      "names": [
+        "SQM Salar de Atacama Brine (Chile)",
+        "Ganfeng Lithium Refinery",
+        "EcoPro BM",
+        "CATL Ningde Gigafactory",
+        "Tesla Inc."
+      ],
+      "contagion": 0.342168,
+      "holding": "HOLDING:TSLA",
+      "exposure": 15200000.0,
+      "currency": "USD",
+      "at_risk": 5200946.0
+    },
+    {
+      "path": [
+        "RAW:INDONESIA_NI",
+        "SUP:HUAYOU",
+        "SUP:SUMITOMO",
+        "HOLDING:PANASONIC"
+      ],
+      "names": [
+        "Weda Bay Nickel Laterite (Indonesia)",
+        "Zhejiang Huayou Cobalt's Refinery",
+        "Sumitomo Metal Mining 'NCA' Line",
+        "Panasonic Energy's Kansas Plant"
+      ],
+      "contagion": 0.318725,
+      "holding": "HOLDING:PANASONIC",
+      "exposure": 3100000000.0,
+      "currency": "JPY",
+      "at_risk": 988047500.0
+    },
+    {
+      "path": [
+        "RAW:GREENBUSHES",
+        "SUP:KINGS_MTN",
+        "SUP:UMICORE",
+        "SUP:CATL",
+        "HOLDING:TSLA"
+      ],
+      "names": [
+        "Greenbushes Spodumene",
+        "Albemarle's Kings Mountain",
+        "Umicore Cathode Materials",
+        "CATL Ningde Gigafactory",
+        "Tesla Inc."
+      ],
+      "contagion": 0.31447,
+      "holding": "HOLDING:TSLA",
+      "exposure": 15200000.0,
+      "currency": "USD",
+      "at_risk": 4779950.08
+    },
+    {
+      "path": [
+        "RAW:ATACAMA_LI",
+        "SUP:KINGS_MTN",
+        "SUP:UMICORE",
+        "SUP:CATL",
+        "HOLDING:TSLA"
+      ],
+      "names": [
+        "SQM Salar de Atacama Brine (Chile)",
+        "Albemarle's Kings Mountain",
+        "Umicore Cathode Materials",
+        "CATL Ningde Gigafactory",
+        "Tesla Inc."
+      ],
+      "contagion": 0.259438,
+      "holding": "HOLDING:TSLA",
+      "exposure": 15200000.0,
+      "currency": "USD",
+      "at_risk": 3943458.82
+    },
+    {
+      "path": [
+        "RAW:GREENBUSHES",
+        "SUP:GANFENG",
+        "SUP:ECOPRO",
+        "SUP:CATL",
+        "HOLDING:TSLA"
+      ],
+      "names": [
+        "Greenbushes Spodumene",
+        "Ganfeng Lithium Refinery",
+        "EcoPro BM",
+        "CATL Ningde Gigafactory",
+        "Tesla Inc."
+      ],
+      "contagion": 0.25398,
+      "holding": "HOLDING:TSLA",
+      "exposure": 15200000.0,
+      "currency": "USD",
+      "at_risk": 3860496.0
+    },
+    {
+      "path": [
+        "RAW:INDONESIA_NI",
+        "SUP:HUAYOU",
+        "SUP:ECOPRO",
+        "SUP:CATL",
+        "HOLDING:TSLA"
+      ],
+      "names": [
+        "Weda Bay Nickel Laterite (Indonesia)",
+        "Zhejiang Huayou Cobalt's Refinery",
+        "EcoPro BM",
+        "CATL Ningde Gigafactory",
+        "Tesla Inc."
+      ],
+      "contagion": 0.227835,
+      "holding": "HOLDING:TSLA",
+      "exposure": 15200000.0,
+      "currency": "USD",
+      "at_risk": 3463092.0
+    },
+    {
+      "path": [
+        "RAW:INDONESIA_NI",
+        "SUP:HUAYOU",
+        "SUP:UMICORE",
+        "SUP:CATL",
+        "HOLDING:TSLA"
+      ],
+      "names": [
+        "Weda Bay Nickel Laterite (Indonesia)",
+        "Zhejiang Huayou Cobalt's Refinery",
+        "Umicore Cathode Materials",
+        "CATL Ningde Gigafactory",
+        "Tesla Inc."
+      ],
+      "contagion": 0.226822,
+      "holding": "HOLDING:TSLA",
+      "exposure": 15200000.0,
+      "currency": "USD",
+      "at_risk": 3447700.48
+    },
+    {
+      "path": [
+        "RAW:DRC_COBALT",
+        "SUP:HUAYOU",
+        "SUP:ECOPRO",
+        "SUP:CATL",
+        "HOLDING:BYD"
+      ],
+      "names": [
+        "Kolwezi Cobalt Mine (DRC)",
+        "Zhejiang Huayou Cobalt's Refinery",
+        "EcoPro BM",
+        "CATL Ningde Gigafactory",
+        "BYD Co. Ltd"
+      ],
+      "contagion": 0.155925,
+      "holding": "HOLDING:BYD",
+      "exposure": 2400000.0,
+      "currency": "USD",
+      "at_risk": 374220.0
+    },
+    {
+      "path": [
+        "RAW:DRC_COBALT",
+        "SUP:HUAYOU",
+        "SUP:UMICORE",
+        "SUP:CATL",
+        "HOLDING:BYD"
+      ],
+      "names": [
+        "Kolwezi Cobalt Mine (DRC)",
+        "Zhejiang Huayou Cobalt's Refinery",
+        "Umicore Cathode Materials",
+        "CATL Ningde Gigafactory",
+        "BYD Co. Ltd"
+      ],
+      "contagion": 0.155232,
+      "holding": "HOLDING:BYD",
+      "exposure": 2400000.0,
+      "currency": "USD",
+      "at_risk": 372556.8
+    },
+    {
+      "path": [
+        "RAW:ATACAMA_LI",
+        "SUP:GANFENG",
+        "SUP:ECOPRO",
+        "SUP:CATL",
+        "HOLDING:BYD"
+      ],
+      "names": [
+        "SQM Salar de Atacama Brine (Chile)",
+        "Ganfeng Lithium Refinery",
+        "EcoPro BM",
+        "CATL Ningde Gigafactory",
+        "BYD Co. Ltd"
+      ],
+      "contagion": 0.144287,
+      "holding": "HOLDING:BYD",
+      "exposure": 2400000.0,
+      "currency": "USD",
+      "at_risk": 346290.0
+    },
+    {
+      "path": [
+        "RAW:GREENBUSHES",
+        "SUP:KINGS_MTN",
+        "SUP:UMICORE",
+        "SUP:CATL",
+        "HOLDING:BYD"
+      ],
+      "names": [
+        "Greenbushes Spodumene",
+        "Albemarle's Kings Mountain",
+        "Umicore Cathode Materials",
+        "CATL Ningde Gigafactory",
+        "BYD Co. Ltd"
+      ],
+      "contagion": 0.132608,
+      "holding": "HOLDING:BYD",
+      "exposure": 2400000.0,
+      "currency": "USD",
+      "at_risk": 318259.2
+    },
+    {
+      "path": [
+        "RAW:ATACAMA_LI",
+        "SUP:KINGS_MTN",
+        "SUP:UMICORE",
+        "SUP:CATL",
+        "HOLDING:BYD"
+      ],
+      "names": [
+        "SQM Salar de Atacama Brine (Chile)",
+        "Albemarle's Kings Mountain",
+        "Umicore Cathode Materials",
+        "CATL Ningde Gigafactory",
+        "BYD Co. Ltd"
+      ],
+      "contagion": 0.109402,
+      "holding": "HOLDING:BYD",
+      "exposure": 2400000.0,
+      "currency": "USD",
+      "at_risk": 262563.84
+    },
+    {
+      "path": [
+        "RAW:GREENBUSHES",
+        "SUP:GANFENG",
+        "SUP:ECOPRO",
+        "SUP:CATL",
+        "HOLDING:BYD"
+      ],
+      "names": [
+        "Greenbushes Spodumene",
+        "Ganfeng Lithium Refinery",
+        "EcoPro BM",
+        "CATL Ningde Gigafactory",
+        "BYD Co. Ltd"
+      ],
+      "contagion": 0.1071,
+      "holding": "HOLDING:BYD",
+      "exposure": 2400000.0,
+      "currency": "USD",
+      "at_risk": 257040.0
+    },
+    {
+      "path": [
+        "RAW:INDONESIA_NI",
+        "SUP:HUAYOU",
+        "SUP:ECOPRO",
+        "SUP:CATL",
+        "HOLDING:BYD"
+      ],
+      "names": [
+        "Weda Bay Nickel Laterite (Indonesia)",
+        "Zhejiang Huayou Cobalt's Refinery",
+        "EcoPro BM",
+        "CATL Ningde Gigafactory",
+        "BYD Co. Ltd"
+      ],
+      "contagion": 0.096075,
+      "holding": "HOLDING:BYD",
+      "exposure": 2400000.0,
+      "currency": "USD",
+      "at_risk": 230580.0
+    },
+    {
+      "path": [
+        "RAW:INDONESIA_NI",
+        "SUP:HUAYOU",
+        "SUP:UMICORE",
+        "SUP:CATL",
+        "HOLDING:BYD"
+      ],
+      "names": [
+        "Weda Bay Nickel Laterite (Indonesia)",
+        "Zhejiang Huayou Cobalt's Refinery",
+        "Umicore Cathode Materials",
+        "CATL Ningde Gigafactory",
+        "BYD Co. Ltd"
+      ],
+      "contagion": 0.095648,
+      "holding": "HOLDING:BYD",
+      "exposure": 2400000.0,
+      "currency": "USD",
+      "at_risk": 229555.2
+    }
+  ]
+}

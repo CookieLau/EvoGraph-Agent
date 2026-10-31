@@ -1,0 +1,164 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="700" viewBox="0 0 1400 700" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <title>EvoGraph-Quant architecture</title>
+  <defs>
+    <marker id="a-amber" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#F5A524"/></marker>
+    <marker id="a-lime" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#A3E635"/></marker>
+    <marker id="a-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#F87171"/></marker>
+    <marker id="a-purple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#C084FC"/></marker>
+    <marker id="a-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#4ADE80"/></marker>
+  </defs>
+
+  <!-- background -->
+  <rect x="0" y="0" width="1400" height="700" rx="20" fill="#0B1020"/>
+
+  <!-- header -->
+  <text x="40" y="50" font-size="24" font-weight="700" fill="#E6EAF2">EvoGraph-Quant</text>
+  <text x="40" y="76" font-size="14" fill="#9AA4BF">Air-gapped, self-evolving financial contagion graph agent</text>
+  <text x="1360" y="50" font-size="13" fill="#9AA4BF" text-anchor="end">Daytona · Neo4j · Nosana · AdalFlow</text>
+
+  <!-- payload upload route (dashed) -->
+  <path d="M165,130 L165,104 L955,104 L955,128" fill="none" stroke="#F5A524" stroke-width="1.6" stroke-dasharray="6 5" marker-end="url(#a-amber)"/>
+  <text x="560" y="97" font-size="11" fill="#F5A524" text-anchor="middle">payload.json uploaded into the offline sandbox</text>
+
+  <!-- ===== 1. Confidential feed ===== -->
+  <rect x="40" y="130" width="250" height="360" rx="14" fill="#121A2F" stroke="#26314F" stroke-width="1.5"/>
+  <rect x="54" y="130" width="222" height="4" rx="2" fill="#F5A524"/>
+  <circle cx="64" cy="158" r="12" fill="#F5A524"/>
+  <text x="64" y="162.5" font-size="13" font-weight="700" fill="#0B1020" text-anchor="middle">1</text>
+  <text x="84" y="163" font-size="16" font-weight="700" fill="#E6EAF2">Confidential Feed</text>
+  <text x="56" y="190" font-size="12" fill="#9AA4BF">portfolio + supply chain</text>
+  <text x="56" y="210" font-size="12" fill="#C9D1E4">6 entities · 5 dependency edges</text>
+  <text x="56" y="244" font-size="13" font-weight="700" fill="#F5A524">3 fatal traps</text>
+
+  <rect x="54" y="256" width="222" height="44" rx="8" fill="#0E1426" stroke="#26314F"/>
+  <text x="66" y="273" font-size="11" fill="#9AA4BF">currency strings + nulls</text>
+  <text x="66" y="291" font-size="11" font-family="'JetBrains Mono', SFMono-Regular, Menlo, monospace" fill="#FCD34D">$12,500,000 · €4.2M · null</text>
+
+  <rect x="54" y="308" width="222" height="44" rx="8" fill="#0E1426" stroke="#26314F"/>
+  <text x="66" y="325" font-size="11" fill="#9AA4BF">prefixed weights</text>
+  <text x="66" y="343" font-size="11" font-family="'JetBrains Mono', SFMono-Regular, Menlo, monospace" fill="#FCD34D">weight: "CRITICAL_0.98"</text>
+
+  <rect x="54" y="360" width="222" height="44" rx="8" fill="#0E1426" stroke="#26314F"/>
+  <text x="66" y="377" font-size="11" fill="#9AA4BF">quotes inside names</text>
+  <text x="66" y="395" font-size="11" font-family="'JetBrains Mono', SFMono-Regular, Menlo, monospace" fill="#FCD34D">NVIDIA Corp's Core</text>
+
+  <text x="56" y="442" font-size="12" fill="#9AA4BF">stays on private compute</text>
+  <text x="56" y="462" font-size="10" font-family="'JetBrains Mono', SFMono-Regular, Menlo, monospace" fill="#6B7699">Q4_ALPHA_DESK_INTERNAL_ONLY</text>
+
+  <!-- ===== 2. Nosana ===== -->
+  <rect x="360" y="130" width="320" height="250" rx="14" fill="#121A2F" stroke="#26314F" stroke-width="1.5"/>
+  <rect x="374" y="130" width="292" height="4" rx="2" fill="#A3E635"/>
+  <circle cx="384" cy="158" r="12" fill="#A3E635"/>
+  <text x="384" y="162.5" font-size="13" font-weight="700" fill="#0B1020" text-anchor="middle">2</text>
+  <text x="404" y="163" font-size="16" font-weight="700" fill="#E6EAF2">Nosana GPU · Ollama</text>
+  <text x="376" y="186" font-size="12" fill="#9AA4BF">private open-weight model · no external API</text>
+
+  <rect x="380" y="200" width="280" height="70" rx="10" fill="#0E1426" stroke="#A3E635" stroke-opacity="0.55"/>
+  <text x="396" y="228" font-size="14" font-weight="700" fill="#E6EAF2">Forward pass</text>
+  <text x="396" y="252" font-size="12" fill="#9AA4BF">writes the Python ETL script</text>
+
+  <rect x="380" y="290" width="280" height="70" rx="10" fill="#0E1426" stroke="#C084FC" stroke-opacity="0.55"/>
+  <text x="396" y="318" font-size="14" font-weight="700" fill="#E6EAF2">Backward pass</text>
+  <text x="396" y="342" font-size="12" fill="#9AA4BF">textual-gradient optimizer</text>
+
+  <!-- ===== 4. AdalFlow ===== -->
+  <rect x="360" y="450" width="320" height="150" rx="14" fill="#121A2F" stroke="#26314F" stroke-width="1.5"/>
+  <rect x="374" y="450" width="292" height="4" rx="2" fill="#C084FC"/>
+  <circle cx="384" cy="478" r="12" fill="#C084FC"/>
+  <text x="384" y="482.5" font-size="13" font-weight="700" fill="#0B1020" text-anchor="middle">4</text>
+  <text x="404" y="483" font-size="16" font-weight="700" fill="#E6EAF2">AdalFlow Parameter</text>
+  <text x="376" y="507" font-size="12" fill="#9AA4BF">evolvable System Prompt</text>
+
+  <rect x="380" y="522" width="78" height="26" rx="13" fill="#2A1F45" stroke="#C084FC" stroke-opacity="0.6"/>
+  <text x="419" y="539" font-size="11" font-family="'JetBrains Mono', SFMono-Regular, Menlo, monospace" fill="#E9D5FF" text-anchor="middle">v1 naive</text>
+  <path d="M462,535 L484,535" stroke="#C084FC" stroke-width="1.5" marker-end="url(#a-purple)"/>
+  <rect x="488" y="522" width="78" height="26" rx="13" fill="#2A1F45" stroke="#C084FC" stroke-opacity="0.6"/>
+  <text x="527" y="539" font-size="11" font-family="'JetBrains Mono', SFMono-Regular, Menlo, monospace" fill="#E9D5FF" text-anchor="middle">v2 regex</text>
+  <path d="M570,535 L592,535" stroke="#C084FC" stroke-width="1.5" marker-end="url(#a-purple)"/>
+  <rect x="596" y="522" width="64" height="26" rx="13" fill="#163324" stroke="#4ADE80" stroke-opacity="0.7"/>
+  <text x="628" y="539" font-size="11" font-family="'JetBrains Mono', SFMono-Regular, Menlo, monospace" fill="#BBF7D0" text-anchor="middle">v3 pass</text>
+  <text x="376" y="580" font-size="11" font-family="'JetBrains Mono', SFMono-Regular, Menlo, monospace" fill="#6B7699">requires_opt=True · update_value()</text>
+
+  <!-- ===== 3. Daytona ===== -->
+  <rect x="820" y="130" width="270" height="330" rx="14" fill="#121A2F" stroke="#26314F" stroke-width="1.5"/>
+  <rect x="834" y="130" width="242" height="4" rx="2" fill="#60A5FA"/>
+  <circle cx="844" cy="158" r="12" fill="#60A5FA"/>
+  <text x="844" y="162.5" font-size="13" font-weight="700" fill="#0B1020" text-anchor="middle">3</text>
+  <text x="864" y="163" font-size="16" font-weight="700" fill="#E6EAF2">Daytona Sandbox</text>
+  <text x="836" y="188" font-size="12" fill="#9AA4BF">execution verifier (RL environment)</text>
+  <rect x="836" y="202" width="190" height="26" rx="6" fill="#0E1A33" stroke="#60A5FA" stroke-opacity="0.6"/>
+  <text x="848" y="219" font-size="11" font-family="'JetBrains Mono', SFMono-Regular, Menlo, monospace" fill="#BFDBFE">network_block_all=True</text>
+  <text x="836" y="252" font-size="12" fill="#9AA4BF">~0.5 s spin-up · fully offline</text>
+  <text x="836" y="284" font-size="13" font-weight="700" fill="#E6EAF2">Emits</text>
+  <text x="846" y="306" font-size="12" fill="#C9D1E4">• exit code</text>
+  <text x="846" y="328" font-size="12" fill="#C9D1E4">• stderr traceback</text>
+  <text x="846" y="350" font-size="12" fill="#C9D1E4">• ground-truth checks</text>
+  <text x="846" y="372" font-size="12" fill="#C9D1E4">• reward 0.0 → 1.0</text>
+  <rect x="836" y="392" width="238" height="48" rx="8" fill="#2A1216" stroke="#F87171" stroke-opacity="0.5"/>
+  <text x="846" y="411" font-size="10.5" font-family="'JetBrains Mono', SFMono-Regular, Menlo, monospace" fill="#FCA5A5">ValueError: could not convert</text>
+  <text x="846" y="428" font-size="10.5" font-family="'JetBrains Mono', SFMono-Regular, Menlo, monospace" fill="#FCA5A5">string to float: '$12,500,000'</text>
+
+  <!-- ===== 5. Neo4j ===== -->
+  <rect x="1150" y="130" width="210" height="470" rx="14" fill="#121A2F" stroke="#26314F" stroke-width="1.5"/>
+  <rect x="1164" y="130" width="182" height="4" rx="2" fill="#2DD4BF"/>
+  <circle cx="1174" cy="158" r="12" fill="#2DD4BF"/>
+  <text x="1174" y="162.5" font-size="13" font-weight="700" fill="#0B1020" text-anchor="middle">5</text>
+  <text x="1194" y="163" font-size="16" font-weight="700" fill="#E6EAF2">Neo4j Aura</text>
+  <text x="1166" y="188" font-size="12" fill="#9AA4BF">contagion graph</text>
+  <text x="1166" y="220" font-size="12" fill="#C9D1E4">• parameterized MERGE</text>
+  <text x="1166" y="242" font-size="12" fill="#C9D1E4">• multi-hop Cypher</text>
+  <text x="1176" y="260" font-size="12" fill="#C9D1E4">contagion paths</text>
+  <text x="1166" y="312" font-size="34" font-weight="700" fill="#2DD4BF">$18.1M</text>
+  <text x="1166" y="334" font-size="12" fill="#9AA4BF">exposure at risk</text>
+  <text x="1166" y="360" font-size="11" font-family="'JetBrains Mono', SFMono-Regular, Menlo, monospace" fill="#99F6E4" xml:space="preserve">NVDA  $10.7M  ×0.857</text>
+  <text x="1166" y="378" font-size="11" font-family="'JetBrains Mono', SFMono-Regular, Menlo, monospace" fill="#99F6E4" xml:space="preserve">AAPL   $7.4M  ×0.754</text>
+  <text x="1166" y="414" font-size="12" fill="#C9D1E4">• agent evolution lineage</text>
+  <text x="1166" y="434" font-size="10.5" font-family="'JetBrains Mono', SFMono-Regular, Menlo, monospace" fill="#6B7699">(:Epoch)-[:EVOLVED_TO]-&gt;</text>
+  <!-- mini graph glyph -->
+  <g stroke="#2DD4BF" stroke-opacity="0.55" stroke-width="1.5">
+    <line x1="1182" y1="490" x2="1222" y2="472"/>
+    <line x1="1222" y1="472" x2="1262" y2="490"/>
+    <line x1="1262" y1="490" x2="1302" y2="470"/>
+    <line x1="1262" y1="490" x2="1310" y2="506"/>
+  </g>
+  <circle cx="1182" cy="490" r="7" fill="#F87171"/>
+  <circle cx="1222" cy="472" r="6" fill="#F5A524"/>
+  <circle cx="1262" cy="490" r="6" fill="#60A5FA"/>
+  <circle cx="1302" cy="470" r="7" fill="#2DD4BF"/>
+  <circle cx="1310" cy="506" r="7" fill="#2DD4BF"/>
+  <text x="1166" y="526" font-size="10" fill="#6B7699">QUARTZ → ZEISS → ASML → TSMC</text>
+
+  <!-- ===== arrows ===== -->
+  <!-- feed -> forward -->
+  <path d="M290,222 L378,222" fill="none" stroke="#F5A524" stroke-width="2" marker-end="url(#a-amber)"/>
+  <text x="325" y="214" font-size="11" fill="#F5A524" text-anchor="middle">schema</text>
+
+  <!-- forward -> daytona -->
+  <path d="M660,226 L818,226" fill="none" stroke="#A3E635" stroke-width="2" marker-end="url(#a-lime)"/>
+  <text x="750" y="216" font-size="12" font-weight="600" fill="#A3E635" text-anchor="middle">ETL script</text>
+
+  <!-- daytona -> backward (loss) -->
+  <path d="M820,325 L662,325" fill="none" stroke="#F87171" stroke-width="2" marker-end="url(#a-red)"/>
+  <text x="750" y="314" font-size="11" font-weight="600" fill="#F87171" text-anchor="middle">loss = traceback</text>
+  <text x="750" y="342" font-size="11" font-weight="600" fill="#F87171" text-anchor="middle">+ failed checks</text>
+
+  <!-- backward -> adalflow (textual gradient) -->
+  <path d="M520,360 L520,448" fill="none" stroke="#C084FC" stroke-width="2" marker-end="url(#a-purple)"/>
+  <text x="530" y="410" font-size="12" font-weight="600" fill="#C084FC">textual gradient</text>
+
+  <!-- adalflow -> forward (new prompt) -->
+  <path d="M360,525 L330,525 L330,255 L378,255" fill="none" stroke="#C084FC" stroke-width="2" marker-end="url(#a-purple)"/>
+  <text x="322" y="400" font-size="11" fill="#C084FC" text-anchor="middle" transform="rotate(-90 322 400)">System Prompt vN</text>
+
+  <!-- daytona -> neo4j (verified commit) -->
+  <path d="M955,460 L955,548 L1148,548" fill="none" stroke="#4ADE80" stroke-width="2.2" marker-end="url(#a-green)"/>
+  <text x="966" y="526" font-size="11" font-weight="600" fill="#4ADE80">only verified data</text>
+  <text x="966" y="540" font-size="11" font-weight="600" fill="#4ADE80">is committed (reward 1.0)</text>
+
+  <!-- adalflow -> neo4j lineage (dashed) -->
+  <path d="M680,582 L1148,582" fill="none" stroke="#C084FC" stroke-width="1.6" stroke-dasharray="6 5" marker-end="url(#a-purple)"/>
+  <text x="800" y="574" font-size="11" fill="#C084FC" text-anchor="middle">epoch + prompt lineage</text>
+
+  <!-- footer -->
+  <text x="40" y="656" font-size="13" fill="#9AA4BF">Loop: generate → execute in offline sandbox → diff against ground truth → textual gradient → new prompt → re-run → commit to graph</text>
+</svg>

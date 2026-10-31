@@ -1,0 +1,41 @@
+{
+  "report_id": "Q4_EV_BATTERY_DESK_INTERNAL_ONLY",
+  "desk": "Thematic EV & Battery Materials Contagion",
+  "nodes": [
+    {"id": "HOLDING:TSLA", "name": "Tesla Inc.", "tier": "Portfolio_Holding", "exposure_raw": "$15,200,000", "status": "ACTIVE"},
+    {"id": "HOLDING:BYD", "name": "BYD Co. Ltd", "tier": "Portfolio_Holding", "exposure_raw": "2,400,000 USD", "status": "ACTIVE"},
+    {"id": "HOLDING:PANASONIC", "name": "Panasonic Energy's Kansas Plant", "tier": "Portfolio_Holding", "exposure_raw": "¥3.1B", "status": "ACTIVE"},
+    {"id": "SUP:CATL", "name": "CATL Ningde Gigafactory", "tier": "Tier1_CellMaker", "exposure_raw": "$0.75M", "status": "ACTIVE"},
+    {"id": "SUP:LGES", "name": "LG Energy Solution's Ochang Plant", "tier": "Tier1_CellMaker", "exposure_raw": "€6.3M", "status": "ACTIVE"},
+    {"id": "SUP:ECOPRO", "name": "EcoPro BM", "tier": "Tier2_Cathode", "exposure_raw": "$4,100,000", "status": "ACTIVE"},
+    {"id": "SUP:UMICORE", "name": "Umicore Cathode Materials", "tier": "Tier2_Cathode", "exposure_raw": "1.2K", "status": "ACTIVE"},
+    {"id": "SUP:SUMITOMO", "name": "Sumitomo Metal Mining 'NCA' Line", "tier": "Tier2_Cathode", "exposure_raw": "¥850M", "status": "ACTIVE"},
+    {"id": "SUP:GANFENG", "name": "Ganfeng Lithium Refinery", "tier": "Tier3_Refiner", "exposure_raw": "3.3M USD", "status": "ACTIVE"},
+    {"id": "SUP:HUAYOU", "name": "Zhejiang Huayou Cobalt's Refinery", "tier": "Tier3_Refiner", "exposure_raw": "€2.05M", "status": "WARNING"},
+    {"id": "SUP:KINGS_MTN", "name": "Albemarle's Kings Mountain", "tier": "Tier3_Refiner", "exposure_raw": "$1.8M", "status": "WARNING"},
+    {"id": "RAW:ATACAMA_LI", "name": "SQM Salar de Atacama Brine (Chile)", "tier": "Tier4_RawMaterial", "exposure_raw": "$950,000", "status": "ACTIVE"},
+    {"id": "RAW:GREENBUSHES", "name": "Greenbushes Spodumene", "tier": "Tier4_RawMaterial", "exposure_raw": " 640,000 USD ", "status": "ACTIVE"},
+    {"id": "RAW:DRC_COBALT", "name": "Kolwezi Cobalt Mine (DRC)", "tier": "Tier4_RawMaterial", "exposure_raw": null, "status": "SANCTION_OR_FORCE_MAJEURE"},
+    {"id": "RAW:INDONESIA_NI", "name": "Weda Bay Nickel Laterite (Indonesia)", "tier": "Tier4_RawMaterial", "exposure_raw": "2.2M usd", "status": "ACTIVE"}
+  ],
+  "edges": [
+    {"src": "RAW:ATACAMA_LI", "dst": "SUP:GANFENG", "rel": "SUPPLIES_LITHIUM_BRINE", "weight": "CRITICAL_0.97", "note": "Offtake for 'battery-grade' carbonate"},
+    {"src": "RAW:ATACAMA_LI", "dst": "SUP:KINGS_MTN", "rel": "SUPPLIES_LITHIUM_BRINE", "weight": " 0.66 ", "note": "Spot cargoes, Antofagasta port"},
+    {"src": "RAW:GREENBUSHES", "dst": "SUP:GANFENG", "rel": "SUPPLIES_SPODUMENE", "weight": 0.72, "note": "SC6 concentrate"},
+    {"src": "RAW:GREENBUSHES", "dst": "SUP:KINGS_MTN", "rel": "SUPPLIES_SPODUMENE", "weight": "HIGH_0.8", "note": "Talison's chemical-grade lot"},
+    {"src": "RAW:DRC_COBALT", "dst": "SUP:HUAYOU", "rel": "SUPPLIES_COBALT_HYDROXIDE", "weight": "CRITICAL_0.99", "note": "Sole source for 'Tier-A' hydroxide"},
+    {"src": "RAW:INDONESIA_NI", "dst": "SUP:HUAYOU", "rel": "SUPPLIES_NICKEL", "weight": 0.61, "note": "HPAL MHP feed"},
+    {"src": "SUP:GANFENG", "dst": "SUP:ECOPRO", "rel": "SUPPLIES_LITHIUM_HYDROXIDE", "weight": 0.85, "note": "LiOH for high-nickel NCM"},
+    {"src": "SUP:KINGS_MTN", "dst": "SUP:UMICORE", "rel": "SUPPLIES_LITHIUM_HYDROXIDE", "weight": "HIGH_0.74", "note": "IRA-compliant 'domestic' content"},
+    {"src": "SUP:HUAYOU", "dst": "SUP:ECOPRO", "rel": "SUPPLIES_PRECURSOR", "weight": "CRITICAL_0.9", "note": "NCM pCAM"},
+    {"src": "SUP:HUAYOU", "dst": "SUP:UMICORE", "rel": "SUPPLIES_PRECURSOR", "weight": 0.7, "note": "Cobalt-rich pCAM"},
+    {"src": "SUP:HUAYOU", "dst": "SUP:SUMITOMO", "rel": "SUPPLIES_PRECURSOR", "weight": " 0.55 ", "note": "NCA precursor"},
+    {"src": "SUP:ECOPRO", "dst": "SUP:LGES", "rel": "SUPPLIES_CATHODE", "weight": 0.88, "note": "Ochang's NCMA cathode"},
+    {"src": "SUP:UMICORE", "dst": "SUP:CATL", "rel": "SUPPLIES_CATHODE", "weight": 0.64, "note": "European cathode JV"},
+    {"src": "SUP:SUMITOMO", "dst": "HOLDING:PANASONIC", "rel": "SUPPLIES_CATHODE", "weight": "CRITICAL_0.95", "note": "2170 'NCA' cathode, single qualified vendor"},
+    {"src": "SUP:ECOPRO", "dst": "SUP:CATL", "rel": "SUPPLIES_CATHODE", "weight": "0.5", "note": "Secondary qualification"},
+    {"src": "SUP:LGES", "dst": "HOLDING:TSLA", "rel": "SUPPLIES_CELLS", "weight": 0.78, "note": "Model 3/Y 2170 cells"},
+    {"src": "SUP:CATL", "dst": "HOLDING:TSLA", "rel": "SUPPLIES_CELLS", "weight": "HIGH_0.83", "note": "LFP for Shanghai's Giga"},
+    {"src": "SUP:CATL", "dst": "HOLDING:BYD", "rel": "SUPPLIES_CELLS", "weight": 0.35, "note": "Overflow cells beyond FinDreams' capacity"}
+  ]
+}

@@ -1,0 +1,784 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EvoGraph-Quant</title>
+<meta name="description" content="A self-evolving ETL agent that learns from sandbox crashes, so only verified data reaches the risk graph. Built on Daytona, Nosana and Neo4j.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@400;600;700&family=IBM+Plex+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+/* Hallmark · shape: Deck, seventeen slides, one idea each · genre: editorial · theme: Ink (by request, ink: paper, shared through brand/tokens.css) · job: try (the live demo that follows) · draw: manual
+ * hero: Statement beside the title still · nav: deck controls in a bottom rail · footer: none · imagery: real product and documentation screenshots, sponsor logos, launch-film stills, each with a fallback chain · signature: the six dirty values from the real feed set as risk tags
+ * axes: light/grotesk-sans/chromatic-teal · posture: restrained · contrast: pass · fold: pass · v2.0.0 */
+/* Hallmark · pre-emit critique: P4 H4 E4 S5 R4 V4 · weakest: H, dense sponsor slides; each puts the logo first, three rows, two or three real API lines and one screenshot */
+/* waive 22 · ink and greys at zero chroma · a notice board is printed in plain black */
+/* waive: a second signal, red, marks risk and crashes; the brand needs failure to read apart from teal, which still means verified and nothing else */
+/* waive 24b · deck spacing scales with the slide width (cqi) and leaves the 4px grid · each slide must scale as one picture */
+/* copy: verbatim · the title sentence was given word for word; data values keep their straight quotes */
+/* waive: screenshot cards carry a soft shadow at rest, requested so real captures read as objects on the page */
+
+/* Fallback copy of brand/tokens.css; the linked file after this block overrides it when present. */
+:root {
+  --color-paper: oklch(99.5% 0.003 100); --color-paper-2: oklch(97% 0.004 100); --color-paper-3: oklch(94% 0.006 100);
+  --color-ink: oklch(16% 0 0); --color-ink-2: oklch(28% 0 0); --color-muted: oklch(44% 0 0);
+  --color-rule: oklch(89% 0.004 100); --color-rule-2: oklch(93.5% 0.003 100);
+  --color-accent: oklch(50% 0.095 188); --color-accent-soft: oklch(93% 0.05 190); --color-accent-soft-ink: oklch(27% 0.045 190);
+  --color-risk: oklch(54% 0.16 32); --color-risk-soft: oklch(94% 0.035 32);
+  --paper: var(--color-paper); --paper-2: var(--color-paper-2); --paper-3: var(--color-paper-3);
+  --ink: var(--color-ink); --ink-2: var(--color-ink-2); --muted: var(--color-muted); --rule: var(--color-rule);
+  --accent: var(--color-risk); --accent-soft: var(--color-risk-soft);
+  --ok: var(--color-accent); --ok-soft: var(--color-accent-soft);
+  --fail: oklch(48% 0.16 27); --fail-soft: oklch(94% 0.03 27); --warn: oklch(55% 0.11 70);
+  --node-holding: var(--color-ink); --node-t1: oklch(32% 0 0); --node-t2: oklch(44% 0 0); --node-t3: oklch(56% 0 0); --node-t4: var(--color-risk);
+  --font-display: "Epilogue", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Epilogue", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --tracking-display: -0.04em; --display-weight: 700;
+  --radius: 12px; --hair: 1px;
+  --shadow-card: 0 20px 40px oklch(20% 0 0 / 0.12);
+}
+/* Deck tokens, derived from the brand names above. */
+:root {
+  color-scheme: light;
+  --space-xs: 8px; --space-md: 16px; --space-lg: 24px; --space-xl: 40px;
+  --text-sm: 0.875rem; --text-md: 1rem;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-micro: 120ms; --dur-short: 220ms;
+  --color-focus: var(--ok);
+  --rule-hair: var(--hair);
+  --radius-card: var(--radius); --radius-control: 10px; --radius-pill: 999px;
+  --shadow-shot: 0 1px 2px oklch(20% 0 0 / 0.06), 0 18px 36px -18px oklch(20% 0 0 / 0.22);
+  /* sizes follow the slide width and never fall under a readable floor */
+  --deck-h1: max(2.5rem, 6.6cqi);
+  --deck-h2: max(1.6rem, 3.2cqi);
+  --deck-body: max(0.95rem, 1.3cqi);
+  --deck-small: max(0.8125rem, 1.04cqi);
+  --deck-code: max(0.75rem, 0.98cqi);
+  --deck-figure: max(2rem, 4.8cqi);
+  --deck-pad: max(20px, 4.4cqi);
+  --logo-h: max(26px, 3.1cqi);
+  --rail-h: 64px;
+}
+</style>
+<link rel="stylesheet" href="../brand/tokens.css">
+<style>
+*, *::before, *::after { box-sizing: border-box; }
+html, body { overflow-x: clip; }
+html { scrollbar-color: var(--color-muted) var(--color-paper); }
+body { margin: 0; background: var(--color-paper-3); color: var(--color-ink-2); font-family: var(--font-body); font-size: var(--text-md); font-weight: 400; line-height: 1.55; -webkit-font-smoothing: antialiased; }
+::selection { background: var(--ok-soft); color: var(--color-accent-soft-ink); }
+:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+h1, h2, h3 { margin: 0; font-family: var(--font-display); font-weight: var(--display-weight); color: var(--color-ink); font-synthesis: none; letter-spacing: var(--tracking-display); line-height: 1.04; overflow-wrap: break-word; min-width: 0; text-wrap: balance; }
+p { margin: 0; text-wrap: pretty; }
+code, .mono { font-family: var(--font-mono); font-size: 0.9em; color: var(--color-ink); }
+svg { display: block; }
+[hidden] { display: none !important; }
+button { font: inherit; }
+.num { font-variant-numeric: tabular-nums; }
+
+/* ---------- deck frame ---------- */
+.deck { display: grid; gap: var(--space-xl); padding: var(--space-xl) var(--space-md); justify-items: center; }
+.slide { position: relative; width: 100%; max-width: 1600px; aspect-ratio: 16 / 9; container-type: inline-size; background: var(--color-paper); border: var(--rule-hair) solid var(--color-rule); overflow: hidden; }
+.slide-inner { position: relative; height: 100%; padding: var(--deck-pad); display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: max(12px, 2cqi); }
+.slide-head { display: grid; gap: max(10px, 1.2cqi); justify-items: start; }
+.slide h2 { font-size: var(--deck-h2); max-width: 30ch; }
+.slide .lead { font-size: max(1.0625rem, 1.8cqi); line-height: 1.45; max-width: 44ch; color: var(--color-ink-2); }
+.slide-body { min-height: 0; font-size: var(--deck-body); }
+.folio { display: flex; justify-content: space-between; gap: var(--space-md); font-size: var(--deck-small); color: var(--color-muted); border-top: var(--rule-hair) solid var(--color-rule); padding-top: max(var(--space-xs), 0.8cqi); }
+
+/* ---------- logos ---------- */
+.logo { display: block; height: var(--logo-h); width: auto; max-width: 40cqi; object-fit: contain; }
+.logo-text { font-family: var(--font-display); font-weight: 700; font-size: calc(var(--logo-h) * 0.9); color: var(--color-ink); letter-spacing: -0.02em; line-height: 1; }
+.logo-row { display: flex; align-items: center; gap: max(10px, 1.2cqi); }
+.logo-row .role { font-size: var(--deck-small); color: var(--color-muted); }
+
+/* ---------- media slot: a picture, its next source, its drawing, or nothing ---------- */
+.split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.12fr); gap: max(18px, 3cqi); align-items: center; height: 100%; min-height: 0; }
+.split > .text { display: grid; gap: max(10px, 1.5cqi); align-content: start; min-width: 0; }
+.media { position: relative; width: 100%; aspect-ratio: 16 / 9; margin: 0; overflow: hidden; border-radius: var(--radius-card); background: var(--color-paper-2); border: var(--rule-hair) solid var(--color-rule); align-self: center; }
+.media.shot { background: var(--color-paper); box-shadow: var(--shadow-shot); }
+.media > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; display: block; }
+.media.tall > img { object-fit: cover; object-position: top center; }
+.media > .fallback { position: absolute; inset: 0; display: grid; place-items: center; padding: max(10px, 1.4cqi); }
+.media > .fallback svg { width: 100%; height: 100%; }
+.media:has(> img) > .fallback { display: none; }
+.slide.no-media .split { grid-template-columns: minmax(0, 1fr); }
+.slide.no-media .media { display: none; }
+.caption { font-size: var(--deck-small); color: var(--color-muted); margin-top: max(6px, 0.6cqi); }
+
+/* ---------- shared slide parts ---------- */
+.ruled { list-style: none; margin: 0; padding: 0; border-top: var(--rule-hair) solid var(--color-ink); }
+.ruled > li { display: grid; grid-template-columns: minmax(0, 9ch) minmax(0, 1fr); gap: max(12px, 1.6cqi); padding: max(7px, 0.85cqi) 0; border-bottom: var(--rule-hair) solid var(--color-rule); align-items: baseline; }
+.ruled > li > b { font-weight: 600; color: var(--color-ink); line-height: 1.3; }
+.ruled.wide > li { grid-template-columns: minmax(0, 12ch) minmax(0, 1fr); }
+.ruled.plain > li { grid-template-columns: minmax(0, 1fr); }
+.two { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: max(20px, 3.6cqi); align-items: start; }
+.figure { font-family: var(--font-display); font-weight: var(--display-weight); font-size: var(--deck-figure); color: var(--color-ink); line-height: 1; letter-spacing: var(--tracking-display); font-variant-numeric: tabular-nums; }
+.figure.in { color: var(--ok); }
+.figure-label { font-size: var(--deck-small); color: var(--color-muted); max-width: 30ch; margin-top: max(4px, 0.5cqi); }
+.figures { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: max(12px, 1.6cqi); }
+.note { font-size: var(--deck-small); color: var(--color-muted); max-width: 70ch; }
+.well { background: var(--color-paper-2); border: var(--rule-hair) solid var(--color-rule); border-radius: var(--radius-card); padding: max(var(--space-md), 2cqi); }
+.api { margin: 0; padding: max(10px, 1.1cqi) max(12px, 1.3cqi); background: var(--color-paper-2); border: var(--rule-hair) solid var(--color-rule); border-radius: var(--radius-control); font-family: var(--font-mono); font-size: var(--deck-code); line-height: 1.5; color: var(--color-ink); white-space: pre-wrap; overflow-wrap: anywhere; }
+.api .c { color: var(--color-muted); }
+.tag { display: inline-flex; align-items: center; padding: max(3px, 0.35cqi) max(10px, 1cqi); border-radius: var(--radius-pill); font-size: var(--deck-small); font-weight: 600; background: var(--color-paper-3); color: var(--color-ink); }
+.tag.in { background: var(--ok-soft); color: var(--color-accent-soft-ink); }
+
+/* slide 1 */
+.title-slide .split { grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); }
+.title-slide h1 { font-size: var(--deck-h1); line-height: 1; max-width: 10ch; }
+.title-slide .lead { font-size: max(1.125rem, 2cqi); max-width: 30ch; }
+.built { display: flex; flex-wrap: wrap; align-items: center; gap: max(14px, 2cqi); }
+.built .logo { height: max(20px, 2.2cqi); }
+
+/* slide 3: dirty values as risk tags, then the chain */
+.strips { display: flex; flex-wrap: wrap; gap: max(var(--space-xs), 0.9cqi); }
+.strip { display: inline-flex; align-items: center; padding: max(5px, 0.5cqi) max(12px, 1.1cqi); border-radius: var(--radius-pill); box-shadow: inset 0 0 0 var(--rule-hair) var(--accent); background: var(--accent-soft); font-family: var(--font-mono); font-size: var(--deck-small); color: var(--fail); }
+.chain { list-style: none; margin: 0; padding: 0; display: grid; counter-reset: step; border-top: var(--rule-hair) solid var(--color-ink); }
+.chain li { display: grid; grid-template-columns: minmax(0, 2ch) minmax(0, 1fr); gap: max(var(--space-xs), 1cqi); padding: max(6px, 0.65cqi) 0; border-bottom: var(--rule-hair) solid var(--color-rule); line-height: 1.35; }
+.chain li::before { counter-increment: step; content: counter(step); font-weight: 700; color: var(--color-ink); }
+.chain li:last-child, .chain li:last-child::before { color: var(--fail); font-weight: 600; }
+
+/* diagrams */
+.diagram { width: 100%; height: 100%; }
+.d-box { fill: var(--color-paper); stroke: var(--color-ink); stroke-width: 1.2; }
+.d-box.alt { fill: var(--color-paper-2); }
+.d-title { font-family: var(--font-display); font-weight: 700; font-size: 24px; letter-spacing: -0.02em; fill: var(--color-ink); }
+.d-sub { font-family: var(--font-body); font-size: 17px; fill: var(--color-muted); }
+.d-line { fill: none; stroke: var(--color-ink); stroke-width: 1.4; }
+.d-line.fail { stroke: var(--fail); stroke-dasharray: 6 5; }
+.d-line.pass { stroke: var(--ok); stroke-width: 2.4; }
+.d-label { font-family: var(--font-body); font-size: 16px; fill: var(--color-ink-2); }
+.d-label.fail { fill: var(--fail); } .d-label.pass { fill: var(--ok); font-weight: 600; }
+.d-head { fill: var(--color-ink); } .d-head.fail { fill: var(--fail); } .d-head.pass { fill: var(--ok); }
+.g-edge { stroke: var(--color-rule); stroke-width: 3; fill: none; }
+.g-edge.hot { stroke: var(--accent); }
+.g-node { fill: var(--color-paper); stroke: var(--color-ink); stroke-width: 2; }
+.g-node.hot { stroke: var(--accent); stroke-width: 3; }
+.g-node.src { fill: var(--accent); stroke: var(--accent); }
+.g-node.hold { fill: var(--node-holding); stroke: var(--node-holding); }
+.g-name { font-family: var(--font-body); font-weight: 600; font-size: 19px; fill: var(--color-ink); }
+.g-w { font-family: var(--font-mono); font-size: 15px; fill: var(--color-muted); }
+
+/* tables */
+.tbl { width: 100%; border-collapse: collapse; font-size: var(--deck-body); border-top: var(--rule-hair) solid var(--color-ink); }
+.tbl th, .tbl td { text-align: left; padding: max(6px, 0.8cqi) max(var(--space-xs), 1cqi) max(6px, 0.8cqi) 0; border-bottom: var(--rule-hair) solid var(--color-rule); vertical-align: baseline; font-weight: 400; }
+.tbl th { color: var(--color-muted); font-size: var(--deck-small); }
+.tbl td:first-child { font-weight: 600; color: var(--color-ink); }
+.tbl td.num { text-align: right; font-family: var(--font-mono); font-size: 0.92em; font-variant-numeric: tabular-nums; padding-right: 0; }
+.tbl th.num { text-align: right; padding-right: 0; }
+.tbl .err { color: var(--fail); font-family: var(--font-mono); font-size: 0.88em; }
+
+/* integration depth */
+.cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: max(14px, 2.2cqi); height: 100%; align-content: start; }
+.col { display: grid; gap: max(var(--space-xs), 1cqi); align-content: start; border-top: var(--rule-hair) solid var(--color-ink); padding-top: max(12px, 1.4cqi); }
+.col .figure { font-size: max(1.75rem, 3.6cqi); font-variant-numeric: tabular-nums; }
+.col .pos { font-weight: 600; color: var(--color-ink); }
+.col ul { list-style: none; margin: 0; padding: 0; }
+.col li { padding: max(4px, 0.45cqi) 0; border-bottom: var(--rule-hair) solid var(--color-rule); font-size: var(--deck-small); }
+
+/* evidence pair */
+.pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: max(14px, 2cqi); }
+.pair .figure { font-size: max(2.5rem, 6.2cqi); font-variant-numeric: tabular-nums; }
+
+.closing { font-family: var(--font-display); font-weight: var(--display-weight); font-size: var(--deck-h2); color: var(--color-ink); letter-spacing: var(--tracking-display); }
+.video-slide .slide-body { overflow: hidden; }
+.film { display: block; height: 100%; width: auto; max-width: 100%; max-height: 100%; aspect-ratio: 16 / 9; object-fit: contain; background: var(--color-paper-2); border-radius: var(--radius-card); }
+
+/* ---------- deck mode (script on) ---------- */
+.rail { display: none; }
+html.js .deck { height: calc(100dvh - var(--rail-h)); padding: var(--space-md); display: grid; place-items: center; gap: 0; }
+html.js .slide { grid-area: 1 / 1; width: min(100%, calc((100dvh - var(--rail-h) - 32px) * 16 / 9)); visibility: hidden; opacity: 0; transition: opacity var(--dur-short) var(--ease-out), visibility 0s linear var(--dur-short); }
+html.js .slide.is-current { visibility: visible; opacity: 1; transition: opacity var(--dur-short) var(--ease-out), visibility 0s; }
+html.js .rail { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; align-items: center; gap: var(--space-md); height: var(--rail-h); padding: 0 var(--space-lg); border-top: var(--rule-hair) solid var(--color-rule); background: var(--color-paper); }
+.rail-actions { display: flex; gap: var(--space-xs); }
+.btn { min-height: 40px; min-width: 44px; padding: 0 var(--space-md); border: var(--rule-hair) solid var(--color-rule); border-radius: var(--radius-control); background: var(--color-paper-2); color: var(--color-ink); font-weight: 600; cursor: pointer; transition: background-color var(--dur-micro) var(--ease-out), color var(--dur-micro) var(--ease-out), border-color var(--dur-micro) var(--ease-out); }
+.btn:hover { border-color: var(--color-ink); }
+.btn:active { background: var(--color-paper-3); }
+.btn--primary { background: var(--color-ink); border-color: var(--color-ink); color: var(--color-paper); }
+.btn--primary:hover { background: var(--color-ink-2); border-color: var(--color-ink-2); }
+.btn--primary:active { background: var(--color-ink); }
+.btn:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; transition: none; }
+.btn:disabled, .btn--primary:disabled { background: var(--color-paper-2); border-color: var(--color-rule); color: var(--color-muted); cursor: default; }
+.track { position: relative; height: 2px; background: var(--color-rule); overflow: hidden; }
+.track > span { position: absolute; inset: 0; background: var(--color-ink); transform-origin: left center; transform: scaleX(0); transition: transform var(--dur-short) var(--ease-out); }
+.count { font-size: var(--text-sm); color: var(--color-muted); font-variant-numeric: tabular-nums; min-width: 7ch; text-align: right; }
+
+/* phones and tall windows: slides grow to their content, one at a time */
+@media (max-width: 40rem), (max-aspect-ratio: 4 / 5) {
+  .slide { aspect-ratio: auto; }
+  html.js .deck { height: auto; min-height: calc(100dvh - var(--rail-h)); place-items: start center; }
+  html.js .slide { width: 100%; }
+  html.js .slide:not(.is-current) { display: none; }
+  .split, .title-slide .split, .two, .pair, .cols, .figures { grid-template-columns: minmax(0, 1fr); }
+  .ruled > li, .ruled.wide > li { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  html.js .rail { position: sticky; bottom: 0; padding: 0 var(--space-md); gap: var(--space-xs); }
+  .rail .btn { padding: 0 var(--space-xs); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+}
+
+@media print {
+  @page { size: 13.333in 7.5in; margin: 0; }
+  html, body { background: var(--color-paper); }
+  html.js .deck, .deck { display: block; height: auto; padding: 0; }
+  html.js .slide, .slide { display: block; visibility: visible; opacity: 1; width: 13.333in; height: 7.5in; max-width: none; aspect-ratio: auto; border: 0; break-after: page; page-break-after: always; transition: none; }
+  .rail, .slide.video-slide { display: none !important; }
+}
+</style>
+<script>
+/* Every image calls this on error: try the next source in data-next (separated by |),
+   then a logo becomes its name in type, a picture shows its drawn fallback,
+   a slide marked data-needs-media hides, and any other slide drops to one column. */
+window.imgFail = function (img) {
+  var list = (img.getAttribute('data-next') || '').split('|').filter(Boolean);
+  if (list.length) { img.setAttribute('data-next', list.slice(1).join('|')); img.src = list[0]; return; }
+  img.onerror = null;
+  if (img.classList.contains('logo')) {
+    var t = document.createElement('span'); t.className = 'logo-text'; t.textContent = img.alt; img.replaceWith(t); return;
+  }
+  var fig = img.closest('.media'); var slide = img.closest('.slide');
+  img.remove();
+  if (fig && fig.querySelector('.fallback')) return;
+  if (slide && slide.hasAttribute('data-needs-media')) { slide.hidden = true; if (window.deckRefresh) window.deckRefresh(); return; }
+  if (slide) slide.classList.add('no-media');
+};
+</script>
+</head>
+<body>
+<main class="deck" id="deck" aria-label="EvoGraph-Quant slides">
+
+<!-- Title -->
+<section class="slide title-slide" aria-label="Title">
+  <div class="slide-inner" style="grid-template-rows: minmax(0, 1fr) auto">
+    <div class="split">
+      <div class="text">
+        <h1>EvoGraph-Quant</h1>
+        <p class="lead">A self-evolving ETL agent that learns from sandbox crashes, so only verified data reaches the risk graph.</p>
+        <div class="built" aria-label="Built on">
+          <img class="logo" src="../assets/sponsors/daytona.png" data-next="../assets/sponsors/daytona_160.png" onerror="imgFail(this)" alt="Daytona">
+          <img class="logo" src="../assets/sponsors/nosana_on_light.svg" data-next="../assets/sponsors/nosana.svg|../assets/sponsors/nosana_160.png" onerror="imgFail(this)" alt="Nosana">
+          <img class="logo" src="../assets/sponsors/neo4j.svg" data-next="../assets/sponsors/neo4j_160.png" onerror="imgFail(this)" alt="Neo4j">
+        </div>
+      </div>
+      <figure class="media">
+        <img src="../video/stills/s01_title.png" onerror="imgFail(this)" width="1920" height="1080" alt="Launch film title frame for EvoGraph-Quant">
+        <div class="fallback">
+          <svg viewBox="0 0 640 340" role="img" aria-label="The contagion chain from quartz to NVDA and AAPL">
+            <path class="g-edge hot" d="M70 170 L190 170"/><path class="g-edge hot" d="M190 170 L310 170"/><path class="g-edge hot" d="M310 170 L430 170"/>
+            <path class="g-edge hot" d="M430 170 L560 90"/><path class="g-edge" d="M430 170 L560 250"/>
+            <circle class="g-node src" cx="70" cy="170" r="20"/><circle class="g-node hot" cx="190" cy="170" r="20"/><circle class="g-node hot" cx="310" cy="170" r="20"/><circle class="g-node hot" cx="430" cy="170" r="20"/>
+            <circle class="g-node hold" cx="560" cy="90" r="24"/><circle class="g-node hold" cx="560" cy="250" r="24"/>
+            <text class="g-name" x="40" y="222">Quartz</text><text class="g-name" x="165" y="222">Zeiss</text><text class="g-name" x="285" y="222">ASML</text><text class="g-name" x="406" y="222">TSMC</text>
+            <text class="g-name" x="530" y="48">NVDA</text><text class="g-name" x="530" y="306">AAPL</text>
+          </svg>
+        </div>
+      </figure>
+    </div>
+    <div class="folio"><span>Daytona hackathon, 31 October 2026</span><span class="num"></span></div>
+  </div>
+</section>
+
+<!-- Problem -->
+<section class="slide" aria-label="The problem">
+  <div class="slide-inner">
+    <div class="slide-head"><h2>Risk teams cannot hand this data to an outside agent.</h2></div>
+    <div class="slide-body split">
+      <div class="text">
+        <ul class="ruled">
+          <li><b>The task</b><span>Turn confidential holdings and alternative supply-chain intelligence into one risk graph.</span></li>
+          <li><b>The rule</b><span>The data stays inside. No closed, external coding agents.</span></li>
+          <li><b>The gap</b><span>Small in-house models write the ETL, and it breaks on the first dirty field.</span></li>
+        </ul>
+      </div>
+      <figure class="media">
+        <img src="../video/stills/s02_problem.png" onerror="imgFail(this)" width="1920" height="1080" alt="Launch film frame on the problem: confidential data that cannot leave the firm">
+      </figure>
+    </div>
+    <div class="folio"><span>Why this exists</span><span class="num"></span></div>
+  </div>
+</section>
+
+<!-- Cause and effect -->
+<section class="slide" aria-label="Cause and effect">
+  <div class="slide-inner">
+    <div class="slide-head"><h2>One dirty field can hide an $18.1M exposure.</h2></div>
+    <div class="slide-body split">
+      <div class="text">
+        <div class="strips" aria-label="Six values from the real feed">
+          <span class="strip">'$12,500,000'</span><span class="strip">'€4.2M'</span><span class="strip">'1.5M EUR'</span>
+          <span class="strip">null</span><span class="strip">'CRITICAL_0.98'</span><span class="strip">"NVIDIA Corp's Core"</span>
+        </div>
+        <ol class="chain">
+          <li>Dirty values arrive in the feed</li>
+          <li>The ETL crashes, or writes wrong numbers silently</li>
+          <li>The risk graph has holes</li>
+          <li>Multi-hop contagion becomes invisible</li>
+          <li>A quartz outage reaches NVDA and AAPL unseen</li>
+        </ol>
+      </div>
+      <figure class="media">
+        <img src="../video/stills/s03_contagion.png" onerror="imgFail(this)" width="1920" height="1080" alt="Launch film frame of the contagion path from quartz to the holdings">
+        <div class="fallback">
+          <svg viewBox="0 0 640 340" role="img" aria-label="Contagion chain with edge weights">
+            <path class="g-edge hot" d="M70 170 L190 170"/><path class="g-edge hot" d="M190 170 L310 170"/><path class="g-edge hot" d="M310 170 L430 170"/>
+            <path class="g-edge hot" d="M430 170 L560 90"/><path class="g-edge hot" d="M430 170 L560 250"/>
+            <circle class="g-node src" cx="70" cy="170" r="20"/><circle class="g-node hot" cx="190" cy="170" r="20"/><circle class="g-node hot" cx="310" cy="170" r="20"/><circle class="g-node hot" cx="430" cy="170" r="20"/>
+            <circle class="g-node hold" cx="560" cy="90" r="24"/><circle class="g-node hold" cx="560" cy="250" r="24"/>
+            <text class="g-w" x="112" y="158">0.98</text><text class="g-w" x="232" y="158">0.95</text><text class="g-w" x="352" y="158">0.92</text>
+            <text class="g-w" x="470" y="112">1.0</text><text class="g-w" x="470" y="240">0.88</text>
+            <text class="g-name" x="40" y="222">Quartz</text><text class="g-name" x="165" y="222">Zeiss</text><text class="g-name" x="285" y="222">ASML</text><text class="g-name" x="406" y="222">TSMC</text>
+            <text class="g-name" x="530" y="48">NVDA</text><text class="g-name" x="530" y="306">AAPL</text>
+          </svg>
+        </div>
+      </figure>
+    </div>
+    <div class="folio"><span>Cause and effect, from the payload in this repo</span><span class="num"></span></div>
+  </div>
+</section>
+
+<!-- Idea -->
+<section class="slide" aria-label="The idea">
+  <div class="slide-inner">
+    <div class="slide-head"><h2>Treat the sandbox as the loss function.</h2></div>
+    <div class="slide-body split">
+      <div class="text">
+        <ul class="ruled wide">
+          <li><b>Loss</b><span>Run the generated script and keep its exit code and output.</span></li>
+          <li><b>Gradient</b><span>The traceback plus every failed check, written as text.</span></li>
+          <li><b>Parameter</b><span>The system prompt, rewritten each epoch.</span></li>
+          <li><b>Commit rule</b><span>Only rows that pass the ground-truth check reach Neo4j.</span></li>
+        </ul>
+      </div>
+      <figure class="media">
+        <img src="../video/stills/s04_loop.png" data-next="../assets/loop_light.svg" onerror="imgFail(this)" width="1920" height="1080" alt="The evolution loop: Epoch 1 fails, a textual gradient rewrites the prompt, Epoch 2 passes and commits to Neo4j">
+      </figure>
+    </div>
+    <div class="folio"><span>The idea</span><span class="num"></span></div>
+  </div>
+</section>
+
+<!-- Architecture -->
+<section class="slide" aria-label="Architecture">
+  <div class="slide-inner">
+    <div class="slide-head"><h2>The architecture, end to end.</h2></div>
+    <div class="slide-body" style="display:grid; place-items:center">
+      <figure class="media" style="width:min(100%, calc(100cqi * 0.66)); aspect-ratio: 2 / 1">
+        <img src="../assets/architecture_light.svg" onerror="imgFail(this)" width="1400" height="700" alt="Architecture: the dirty feed, the Nosana model writing ETL scripts, the offline Daytona sandbox with the ground-truth checker, the AdalFlow prompt parameter, and Neo4j receiving only verified rows">
+        <div class="fallback">
+          <svg class="diagram" viewBox="0 0 1200 470" role="img" aria-labelledby="arch-t arch-d" preserveAspectRatio="xMidYMid meet">
+            <title id="arch-t">EvoGraph-Quant architecture</title>
+            <desc id="arch-d">The dirty feed goes to the Nosana model, which writes an ETL script. Daytona runs it offline. The checker scores it. A failure sends the traceback to the Nosana backward pass, which writes a new prompt into the AdalFlow parameter for the next epoch. A pass commits verified rows to Neo4j.</desc>
+            <defs>
+              <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path class="d-head" d="M0 0 L10 5 L0 10 z"/></marker>
+              <marker id="ahf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path class="d-head fail" d="M0 0 L10 5 L0 10 z"/></marker>
+              <marker id="ahp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path class="d-head pass" d="M0 0 L10 5 L0 10 z"/></marker>
+            </defs>
+            <rect class="d-box alt" x="20" y="40" width="190" height="120" rx="12"/>
+            <text class="d-title" x="40" y="88">Dirty feed</text><text class="d-sub" x="40" y="118">holdings and</text><text class="d-sub" x="40" y="140">supply chain</text>
+            <rect class="d-box" x="290" y="40" width="250" height="120" rx="12"/>
+            <text class="d-title" x="310" y="88">Nosana forward</text><text class="d-sub" x="310" y="118">qwen3.8:27b, RTX 5090</text><text class="d-sub" x="310" y="140">writes the ETL script</text>
+            <rect class="d-box" x="620" y="40" width="250" height="120" rx="12"/>
+            <text class="d-title" x="640" y="88">Daytona sandbox</text><text class="d-sub" x="640" y="118">network blocked</text><text class="d-sub" x="640" y="140">runs the script</text>
+            <rect class="d-box" x="950" y="40" width="230" height="120" rx="12"/>
+            <text class="d-title" x="970" y="88">Checker</text><text class="d-sub" x="970" y="118">15 ground-truth checks</text><text class="d-sub" x="970" y="140">reward from 0 to 1</text>
+            <rect class="d-box" x="620" y="300" width="250" height="120" rx="12"/>
+            <text class="d-title" x="640" y="348">Nosana backward</text><text class="d-sub" x="640" y="378">textual gradient</text><text class="d-sub" x="640" y="400">schema, code, error only</text>
+            <rect class="d-box" x="290" y="300" width="250" height="120" rx="12"/>
+            <text class="d-title" x="310" y="348">AdalFlow Parameter</text><text class="d-sub" x="310" y="378">the system prompt</text><text class="d-sub" x="310" y="400">v1, v2, and so on</text>
+            <rect class="d-box alt" x="950" y="300" width="230" height="120" rx="12"/>
+            <text class="d-title" x="970" y="348">Neo4j Aura</text><text class="d-sub" x="970" y="378">MERGE, contagion</text><text class="d-sub" x="970" y="400">and agent lineage</text>
+            <path class="d-line" d="M210 100 H284" marker-end="url(#ah)"/>
+            <path class="d-line" d="M540 100 H614" marker-end="url(#ah)"/><text class="d-label" x="552" y="88">script</text>
+            <path class="d-line" d="M870 100 H944" marker-end="url(#ah)"/><text class="d-label" x="880" y="88">output</text>
+            <path class="d-line pass" d="M1065 160 V294" marker-end="url(#ahp)"/><text class="d-label pass" x="1076" y="222">pass</text><text class="d-label pass" x="1076" y="244">verified rows</text>
+            <path class="d-line fail" d="M1000 160 C 1000 240, 900 250, 876 300" marker-end="url(#ahf)"/><text class="d-label fail" x="830" y="226">fail: traceback</text><text class="d-label fail" x="830" y="248">and failed checks</text>
+            <path class="d-line fail" d="M620 360 H546" marker-end="url(#ahf)"/><text class="d-label fail" x="552" y="348">prompt v2</text>
+            <path class="d-line fail" d="M415 300 V166" marker-end="url(#ahf)"/><text class="d-label fail" x="426" y="240">next epoch</text>
+          </svg>
+        </div>
+      </figure>
+    </div>
+    <div class="folio"><span>Failures loop back through the prompt; a pass is the only way into the graph</span><span class="num"></span></div>
+  </div>
+</section>
+
+<!-- Nosana -->
+<section class="slide" aria-label="Nosana">
+  <div class="slide-inner">
+    <div class="slide-head">
+      <div class="logo-row"><img class="logo" src="../assets/sponsors/nosana_on_light.svg" data-next="../assets/sponsors/nosana.svg|../assets/sponsors/nosana_160.png" onerror="imgFail(this)" alt="Nosana"><span class="role">generate and optimise</span></div>
+      <h2>Both passes run on a private Nosana GPU.</h2>
+    </div>
+    <div class="slide-body split">
+      <div class="text">
+        <pre class="api">chat("forward", msgs)                  <span class="c"># writes the ETL script</span>
+chat("backward", msgs, json_mode=True) <span class="c"># gradient + new prompt</span>
+<span class="c"># qwen3.8:27b, Ollama /v1 on an RTX 5090 job</span></pre>
+        <div class="figures">
+          <div><p class="figure num">5.4 s</p><p class="figure-label">a 101-line ETL script</p></div>
+          <div><p class="figure num">5.1 s</p><p class="figure-label">a JSON prompt rewrite</p></div>
+        </div>
+        <p class="note">The public endpoint failed on a read-only model mount, so requests reach the same GPU over Nosana’s SSH channel. Data passes only the Nosana node and our laptop.</p>
+      </div>
+      <figure class="media shot">
+        <img src="../assets/screens/app_gradient.png" data-next="../assets/screens/app_prompt_diff.png" onerror="imgFail(this)" width="1920" height="1080" alt="EvoGraph-Quant console showing the textual gradient written by qwen3.8:27b on Nosana">
+      </figure>
+    </div>
+    <div class="folio"><span>llm_client.py, evo_engine.py, scripts/nosana_relay.py</span><span class="num"></span></div>
+  </div>
+</section>
+
+<!-- Daytona -->
+<section class="slide" aria-label="Daytona">
+  <div class="slide-inner">
+    <div class="slide-head">
+      <div class="logo-row"><img class="logo" src="../assets/sponsors/daytona.png" data-next="../assets/sponsors/daytona_160.png" onerror="imgFail(this)" alt="Daytona"><span class="role">execute, and the result is the loss</span></div>
+      <h2>Every script runs in an offline Daytona sandbox.</h2>
+    </div>
+    <div class="slide-body split">
+      <div class="text">
+        <pre class="api">sb = daytona.create(CreateSandboxFromSnapshotParams(
+        language="python", network_block_all=True))
+sb.fs.upload_file(payload, "payload.json")
+r = sb.process.code_run(code, timeout=60) <span class="c"># exit_code + traceback</span></pre>
+        <div class="figures">
+          <div><p class="figure num">0.5 s</p><p class="figure-label">to create a sandbox</p></div>
+          <div><p class="figure num">4.3×</p><p class="figure-label">6 sandboxes in parallel: 4.9 s against 21.0 s</p></div>
+        </div>
+        <p class="note">Inside the sandbox, Aura and pypi.org both fail DNS: the generated code cannot leak the feed.</p>
+      </div>
+      <figure class="media shot">
+        <img src="../assets/screens/app_epoch1_fail.png" data-next="../assets/screens/app_verifier.png|../assets/screens/public_daytona_docs_network.png|../video/stills/s05_verify.png" onerror="imgFail(this)" width="1920" height="1080" alt="EvoGraph-Quant console: Epoch 1 crashes inside the Daytona sandbox with exit code 1">
+      </figure>
+    </div>
+    <div class="folio"><span>sandbox_verifier.py, parallel_sandbox.py</span><span class="num"></span></div>
+  </div>
+</section>
+
+<!-- Checker -->
+<section class="slide" aria-label="The checker">
+  <div class="slide-inner">
+    <div class="slide-head"><h2>We compute the reward. The script never claims it.</h2></div>
+    <div class="slide-body split">
+      <div class="text">
+        <ul class="ruled">
+          <li><b>15 checks</b><span>Exit code, marker, JSON, six nodes, five edges, nothing extra.</span></li>
+          <li><b>Partial credit</b><span>Reward is the share of checks passed.</span></li>
+          <li><b>No shortcut</b><span>Printing the success marker without correct data still fails.</span></li>
+        </ul>
+        <div class="well">
+          <p class="figure num">0.733</p>
+          <p class="figure-label">a half-fixed script: currencies right, the M multiplier missed on ASML and ZEISS</p>
+        </div>
+      </div>
+      <figure class="media shot">
+        <img src="../assets/screens/app_verifier.png" data-next="../video/stills/s05_verify.png" onerror="imgFail(this)" width="1920" height="1080" alt="EvoGraph-Quant console showing the ground-truth checks for one epoch">
+      </figure>
+    </div>
+    <div class="folio"><span>ground_truth_checker.py, host side</span><span class="num"></span></div>
+  </div>
+</section>
+
+<!-- Prompt as parameter -->
+<section class="slide" aria-label="Prompt as parameter">
+  <div class="slide-inner">
+    <div class="slide-head"><h2>The prompt is the parameter; the traceback is its gradient.</h2></div>
+    <div class="slide-body split">
+      <div class="text">
+        <ul class="ruled">
+          <li><b>Store</b><span>An AdalFlow Parameter holds the prompt, one version per epoch.</span></li>
+          <li><b>Privacy</b><span>The backward pass sees the schema, the code and the error, never the raw portfolio.</span></li>
+        </ul>
+        <pre class="api"><span class="c"># gradient, written by qwen3.8:27b</span>
+The data contains magnitude suffixes (M/K) and currency codes that must be stripped and multiplied before float conversion.</pre>
+      </div>
+      <figure class="media shot">
+        <img src="../assets/screens/neo4j_lineage.png" data-next="../assets/screens/app_prompt_diff.png" onerror="imgFail(this)" width="1920" height="1080" alt="Prompt versions and the gradient between them">
+      </figure>
+    </div>
+    <div class="folio"><span>AdalFlow Parameter and textual gradient</span><span class="num"></span></div>
+  </div>
+</section>
+
+<!-- Neo4j -->
+<section class="slide" aria-label="Neo4j">
+  <div class="slide-inner">
+    <div class="slide-head">
+      <div class="logo-row"><img class="logo" src="../assets/sponsors/neo4j.svg" data-next="../assets/sponsors/neo4j_160.png" onerror="imgFail(this)" alt="Neo4j"><span class="role">commit, reason, remember</span></div>
+      <h2>Neo4j holds only verified rows, and computes the contagion.</h2>
+    </div>
+    <div class="slide-body split">
+      <div class="text">
+        <pre class="api">UNWIND $rows AS row MERGE (n:Entity {id: row.id})
+MATCH p = (src:Entity {tier: $source_tier})-[*1..8]->(h)
+WITH p, h, reduce(c = 1.0, r IN relationships(p) | c * r.weight) AS contagion</pre>
+        <table class="tbl">
+          <thead><tr><th>Holding</th><th class="num">Contagion</th><th class="num">At risk</th></tr></thead>
+          <tbody>
+            <tr><td>NVDA</td><td class="num">0.85652</td><td class="num">$10,706,500</td></tr>
+            <tr><td>AAPL</td><td class="num">0.7537</td><td class="num">$7,386,628</td></tr>
+          </tbody>
+        </table>
+        <p class="note">Query time 156 to 241 ms. The lineage of every prompt sits in the same graph.</p>
+      </div>
+      <figure class="media shot">
+        <img src="../assets/screens/neo4j_contagion_graph.png" data-next="../assets/screens/app_graph.png|../video/stills/s06_neo4j.png" onerror="imgFail(this)" width="1920" height="1080" alt="The verified risk graph read back from Neo4j, contagion path highlighted">
+        <div class="fallback">
+          <svg viewBox="0 0 640 340" role="img" aria-label="The verified graph, contagion path to NVDA highlighted">
+            <path class="g-edge hot" d="M70 170 L190 170"/><path class="g-edge hot" d="M190 170 L310 170"/><path class="g-edge hot" d="M310 170 L430 170"/>
+            <path class="g-edge hot" d="M430 170 L560 90"/><path class="g-edge" d="M430 170 L560 250"/>
+            <circle class="g-node src" cx="70" cy="170" r="20"/><circle class="g-node hot" cx="190" cy="170" r="20"/><circle class="g-node hot" cx="310" cy="170" r="20"/><circle class="g-node hot" cx="430" cy="170" r="20"/>
+            <circle class="g-node hold" cx="560" cy="90" r="24"/><circle class="g-node hold" cx="560" cy="250" r="24"/>
+            <text class="g-name" x="40" y="222">Quartz</text><text class="g-name" x="165" y="222">Zeiss</text><text class="g-name" x="285" y="222">ASML</text><text class="g-name" x="406" y="222">TSMC</text>
+            <text class="g-name" x="530" y="48">NVDA</text><text class="g-name" x="530" y="306">AAPL</text>
+          </svg>
+        </div>
+      </figure>
+    </div>
+    <div class="folio"><span>graph_store.py, queries.cypher</span><span class="num"></span></div>
+  </div>
+</section>
+
+<!-- Integration depth -->
+<section class="slide" aria-label="Integration depth">
+  <div class="slide-inner">
+    <div class="slide-head"><h2>Integration depth.</h2></div>
+    <div class="slide-body cols">
+      <div class="col">
+        <img class="logo" src="../assets/sponsors/daytona.png" data-next="../assets/sponsors/daytona_160.png" onerror="imgFail(this)" alt="Daytona">
+        <p class="pos">Execute, and the result is the loss</p>
+        <p><span class="figure num">7</span> capabilities</p>
+        <ul><li>Offline create with network_block_all</li><li>fs.upload_file and process.code_run</li><li>Warm reuse, delete and label cleanup</li><li>Parallel fan-out, best of K</li></ul>
+      </div>
+      <div class="col">
+        <img class="logo" src="../assets/sponsors/nosana_on_light.svg" data-next="../assets/sponsors/nosana.svg|../assets/sponsors/nosana_160.png" onerror="imgFail(this)" alt="Nosana">
+        <p class="pos">Generate and optimise</p>
+        <p><span class="figure num">6</span> capabilities</p>
+        <ul><li>RTX 5090 GPU job, Ollama OpenAI API</li><li>Job SSH channel relay</li><li>Forward pass and JSON backward pass</li><li>Prompt lab, 5 runs per prompt</li></ul>
+      </div>
+      <div class="col">
+        <img class="logo" src="../assets/sponsors/neo4j.svg" data-next="../assets/sponsors/neo4j_160.png" onerror="imgFail(this)" alt="Neo4j">
+        <p class="pos">Commit, reason, remember</p>
+        <p><span class="figure num">7</span> capabilities</p>
+        <ul><li>Constraints, UNWIND and MERGE</li><li>Label and type whitelist</li><li>Variable-length paths with reduce()</li><li>Lineage graph, read-back for the UI</li></ul>
+      </div>
+    </div>
+    <div class="folio"><span>docs/SPONSORS.md</span><span class="num"></span></div>
+  </div>
+</section>
+
+<!-- One recorded run -->
+<section class="slide" aria-label="One recorded run">
+  <div class="slide-inner">
+    <div class="slide-head"><h2>One recorded run took 35 seconds, end to end.</h2></div>
+    <div class="slide-body">
+      <table class="tbl">
+        <thead><tr><th>Step</th><th>Result</th><th class="num">Time</th></tr></thead>
+        <tbody>
+          <tr><td>Sandbox warm-up</td><td>offline Daytona sandbox ready</td><td class="num">2.2 s</td></tr>
+          <tr><td>Epoch 1</td><td><span class="err">ValueError: could not convert string to float: '1.5M'</span></td><td class="num">4.8 s + 2.5 s</td></tr>
+          <tr><td>Textual gradient</td><td>prompt v2 written on Nosana</td><td class="num">8.3 s</td></tr>
+          <tr><td>Epoch 2</td><td><span class="tag in">reward 1.0, verified</span></td><td class="num">10.7 s + 1.6 s</td></tr>
+          <tr><td>Neo4j commit</td><td>6 nodes, 5 relationships</td><td class="num">0.9 s</td></tr>
+        </tbody>
+      </table>
+      <p class="note" style="margin-top: max(10px, 1.4cqi)">The 27B model cleaned half the data on its own, then crashed on '1.5M EUR'.</p>
+    </div>
+    <div class="folio"><span>replay/golden_run.json, with Nosana, Daytona and Neo4j all live</span><span class="num"></span></div>
+  </div>
+</section>
+
+<!-- Live product -->
+<section class="slide" aria-label="Live product" data-needs-media>
+  <div class="slide-inner">
+    <div class="slide-head"><h2>The live product.</h2></div>
+    <div class="slide-body" style="display:grid; place-items:center">
+      <figure class="media shot tall" style="width:min(100%, calc(100cqi * 0.7))">
+        <img src="../assets/screens/app_full.png" data-next="../assets/screens/app_graph.png|../assets/screens/app_epoch2_pass.png" onerror="imgFail(this)" width="1920" height="1939" alt="The EvoGraph-Quant console after a live run: the evolution pipeline on the left, the Neo4j contagion graph on the right">
+      </figure>
+    </div>
+    <div class="folio"><span>Live with Nosana, live with a scripted LLM, or replay; the graph is read back from Neo4j</span><span class="num"></span></div>
+  </div>
+</section>
+
+<!-- Evidence -->
+<section class="slide" aria-label="Evidence">
+  <div class="slide-inner">
+    <div class="slide-head"><h2>One backward pass turns 0 of 5 into 5 of 5.</h2></div>
+    <div class="slide-body split">
+      <div class="text">
+        <div class="pair">
+          <div class="well"><p class="figure num">0 / 5</p><p class="figure-label">naive prompt, every run exits 1</p></div>
+          <div class="well"><p class="figure num in">5 / 5</p><p class="figure-label">after one backward pass, reward 1.0 every run</p></div>
+        </div>
+        <p class="note">Five runs each on qwen3.8:27b with real Daytona. Stable in practice, not a statistical claim.</p>
+      </div>
+      <figure class="media">
+        <img src="../video/stills/s07_scale.png" onerror="imgFail(this)" width="1920" height="1080" alt="Launch film frame on the evidence across runs and parallel sandboxes">
+      </figure>
+    </div>
+    <div class="folio"><span>docs/PROMPT_LAB.md</span><span class="num"></span></div>
+  </div>
+</section>
+
+<!-- Generalisation and honesty -->
+<section class="slide" aria-label="Generalisation and honesty">
+  <div class="slide-inner">
+    <div class="slide-head"><h2>New dirt becomes the next loss.</h2></div>
+    <div class="slide-body two">
+      <ul class="ruled">
+        <li><b>New feed</b><span>EV battery chain, 15 nodes. Our final script crashes on an unseen <code>HIGH_</code> prefix: reward 0.0.</span></li>
+        <li><b>One rule later</b><span>Reward 0.946. Only the yen sign is left unmapped.</span></li>
+      </ul>
+      <ul class="ruled plain">
+        <li><span>Live mode calls Nosana, Daytona and Neo4j for real.</span></li>
+        <li><span>Replay files are recorded runs and are labelled as such.</span></li>
+        <li><span>A Claude stand-in answers only if Nosana is down, and the screen says so.</span></li>
+      </ul>
+    </div>
+    <div class="folio"><span>docs/GENERALIZATION.md</span><span class="num"></span></div>
+  </div>
+</section>
+
+<!-- Next -->
+<section class="slide" aria-label="What comes next">
+  <div class="slide-inner">
+    <div class="slide-head"><h2>What comes next.</h2></div>
+    <div class="slide-body split">
+      <div class="text">
+        <ul class="ruled">
+          <li><b>Daytona</b><span>A verified ETL snapshot, and volumes for large vendor feeds.</span></li>
+          <li><b>Nosana</b><span>Job-definition deploys, one GPU job per candidate prompt.</span></li>
+          <li><b>Neo4j</b><span>Passing scripts and their lineage as a reusable ETL library.</span></li>
+        </ul>
+        <p class="closing">Live demo →</p>
+      </div>
+      <figure class="media">
+        <img src="../video/stills/s07b_stack.png" data-next="../video/stills/s08_outro.png" onerror="imgFail(this)" width="1920" height="1080" alt="Launch film frame: built on Daytona, Nosana and Neo4j">
+      </figure>
+    </div>
+    <div class="folio"><span>EvoGraph-Quant</span><span class="num"></span></div>
+  </div>
+</section>
+
+<!-- Film: shown only when the file exists -->
+<section class="slide video-slide" aria-label="Launch film" hidden>
+  <div class="slide-inner">
+    <div class="slide-head"><h2>The launch film.</h2></div>
+    <div class="slide-body" style="display:grid; place-items:center">
+      <video class="film" id="film" controls preload="metadata" playsinline poster="../video/stills/s01_title.png">
+        <source src="../video/EvoGraph-Quant_launch_720p.mp4" type="video/mp4">
+        <source src="../video/EvoGraph-Quant_launch.mp4" type="video/mp4">
+      </video>
+    </div>
+    <div class="folio"><span>video/EvoGraph-Quant_launch_720p.mp4</span><span class="num"></span></div>
+  </div>
+</section>
+
+</main>
+
+<nav class="rail" id="rail" aria-label="Slide controls" hidden>
+  <button class="btn" id="prev" type="button" aria-label="Previous slide">Back</button>
+  <div class="track" aria-hidden="true"><span id="bar"></span></div>
+  <span class="count" id="count" aria-live="polite"></span>
+  <div class="rail-actions">
+    <button class="btn btn--primary" id="next" type="button" aria-label="Next slide">Next</button>
+    <button class="btn" id="full" type="button" aria-label="Toggle full screen">Full screen</button>
+  </div>
+</nav>
+
+<script>
+(function () {
+  var root = document.documentElement;
+  root.classList.add('js');
+  var rail = document.getElementById('rail');
+  var bar = document.getElementById('bar');
+  var count = document.getElementById('count');
+  var prev = document.getElementById('prev');
+  var next = document.getElementById('next');
+  var full = document.getElementById('full');
+  var deck = document.getElementById('deck');
+  var slides = [], n = 0, i = 0;
+  rail.hidden = false;
+
+  /* images that failed before this script ran */
+  Array.prototype.forEach.call(document.querySelectorAll('img'), function (img) {
+    if (img.complete && !img.naturalWidth && img.getAttribute('src')) window.imgFail(img);
+  });
+
+  function refresh() {
+    slides = Array.prototype.slice.call(document.querySelectorAll('.slide:not([hidden])'));
+    n = slides.length;
+    slides.forEach(function (s, j) { var f = s.querySelector('.folio .num'); if (f) f.textContent = j === 0 ? '' : String(j + 1); });
+  }
+  function fromHash() {
+    var k = parseInt((location.hash || '').replace('#', ''), 10);
+    return isNaN(k) ? 0 : Math.min(Math.max(k - 1, 0), n - 1);
+  }
+  function show(k, push) {
+    i = Math.min(Math.max(k, 0), n - 1);
+    slides.forEach(function (s, j) {
+      var on = j === i;
+      s.classList.toggle('is-current', on);
+      s.setAttribute('aria-hidden', on ? 'false' : 'true');
+    });
+    document.querySelectorAll('.slide[hidden]').forEach(function (s) { s.classList.remove('is-current'); });
+    bar.style.transform = 'scaleX(' + ((i + 1) / n) + ')';
+    count.textContent = (i + 1) + ' of ' + n;
+    prev.disabled = i === 0;
+    next.disabled = i === n - 1;
+    var h = '#' + (i + 1);
+    if (location.hash !== h) {
+      if (push) history.pushState(null, '', h); else history.replaceState(null, '', h);
+    }
+    var v = document.getElementById('film');
+    if (v && !v.paused && !(slides[i] && slides[i].classList.contains('video-slide'))) v.pause();
+  }
+  window.deckRefresh = function () { var cur = slides[i]; refresh(); var k = slides.indexOf(cur); show(k < 0 ? i : k, false); };
+  function go(d) { show(i + d, true); }
+  function toggleFull() {
+    if (!document.fullscreenElement) { if (root.requestFullscreen) root.requestFullscreen(); }
+    else if (document.exitFullscreen) document.exitFullscreen();
+  }
+
+  var film = document.getElementById('film');
+  if (film) {
+    film.addEventListener('loadedmetadata', function () {
+      var s = film.closest('.slide');
+      if (s && s.hidden) { s.hidden = false; window.deckRefresh(); }
+    }, { once: true });
+  }
+
+  prev.addEventListener('click', function () { go(-1); });
+  next.addEventListener('click', function () { go(1); });
+  full.addEventListener('click', toggleFull);
+  deck.addEventListener('click', function (e) {
+    if (e.target.closest('a, button, video, pre, code, .tbl')) return;
+    var sel = window.getSelection && String(window.getSelection());
+    if (sel) return;
+    var r = deck.getBoundingClientRect();
+    go(e.clientX - r.left < r.width / 2 ? -1 : 1);
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.altKey || e.ctrlKey || e.metaKey) return;
+    if (e.target && e.target.tagName === 'VIDEO' && (e.key === ' ' || e.key === 'Spacebar')) return;
+    var k = e.key;
+    if (k === 'ArrowRight' || k === 'PageDown' || k === ' ' || k === 'Spacebar') { e.preventDefault(); go(e.shiftKey && k === ' ' ? -1 : 1); }
+    else if (k === 'ArrowLeft' || k === 'PageUp') { e.preventDefault(); go(-1); }
+    else if (k === 'Home') { e.preventDefault(); show(0, true); }
+    else if (k === 'End') { e.preventDefault(); show(n - 1, true); }
+    else if (k === 'f' || k === 'F') { e.preventDefault(); toggleFull(); }
+  });
+  window.addEventListener('hashchange', function () { show(fromHash(), false); });
+  window.addEventListener('beforeprint', function () { slides.forEach(function (s) { s.setAttribute('aria-hidden', 'false'); }); });
+  refresh();
+  show(fromHash(), false);
+})();
+</script>
+</body>
+</html>

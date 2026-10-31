@@ -1,0 +1,107 @@
+node {
+  diameter: 55px;
+  color: #A5ABB6;
+  border-color: #6B7280;
+  border-width: 2px;
+  text-color-internal: #FFFFFF;
+  font-size: 11px;
+  caption: "{name}";
+}
+relationship {
+  color: #EF553B;
+  shaft-width: 2px;
+  font-size: 9px;
+  padding: 3px;
+  text-color-external: #111827;
+  text-color-internal: #FFFFFF;
+  caption: "{weight}";
+}
+node.Entity {
+  color: #A5ABB6;
+  border-color: #6B7280;
+  caption: "{name}";
+}
+node.Portfolio_Holding {
+  diameter: 75px;
+  color: #00CC96;
+  border-color: #00875F;
+  border-width: 4px;
+  text-color-internal: #FFFFFF;
+  caption: "{name}";
+}
+node.Tier1_Foundry {
+  diameter: 62px;
+  color: #636EFA;
+  border-color: #3B44C4;
+  text-color-internal: #FFFFFF;
+  caption: "{name}";
+}
+node.Tier2_Equipment {
+  diameter: 58px;
+  color: #AB63FA;
+  border-color: #7A33C9;
+  text-color-internal: #FFFFFF;
+  caption: "{name}";
+}
+node.Tier3_Component {
+  diameter: 58px;
+  color: #FFA15A;
+  border-color: #C96B22;
+  text-color-internal: #111827;
+  caption: "{name}";
+}
+node.Tier4_RawMaterial {
+  diameter: 75px;
+  color: #EF553B;
+  border-color: #A3200C;
+  border-width: 4px;
+  text-color-internal: #FFFFFF;
+  caption: "{name}";
+}
+node.EvoRun {
+  diameter: 50px;
+  color: #374151;
+  border-color: #111827;
+  text-color-internal: #FFFFFF;
+  caption: "{run_id}";
+}
+node.Epoch {
+  diameter: 45px;
+  color: #19D3F3;
+  border-color: #0E8FA6;
+  text-color-internal: #111827;
+  caption: "{epoch}";
+}
+node.PromptVersion {
+  diameter: 50px;
+  color: #FECB52;
+  border-color: #B8860B;
+  border-width: 3px;
+  text-color-internal: #111827;
+  caption: "{version}";
+}
+relationship.RISK_LINK {
+  color: #EF553B;
+  shaft-width: 3px;
+  caption: "{weight}";
+}
+relationship.SUPPLIES_MATERIAL {
+  color: #EF553B;
+  shaft-width: 3px;
+  caption: "{weight}";
+}
+relationship.SUPPLIES_OPTICS {
+  color: #EF553B;
+  shaft-width: 3px;
+  caption: "{weight}";
+}
+relationship.SUPPLIES_LITHOGRAPHY {
+  color: #EF553B;
+  shaft-width: 3px;
+  caption: "{weight}";
+}
+relationship.FABRICATES_CHIPS {
+  color: #EF553B;
+  shaft-width: 4px;
+  caption: "{weight}";
+}

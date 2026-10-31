@@ -1,0 +1,469 @@
+[
+  {
+    "type": "start",
+    "run_id": "run-174536-45f1f4",
+    "engine_hint": "daytona",
+    "max_epochs": 3,
+    "use_neo4j": true,
+    "ts": 0.0
+  },
+  {
+    "type": "warmup",
+    "engine": "Daytona Sandbox (8f7332d5) · offline",
+    "sandbox_id": "8f7332d5-7674-49ec-9a71-bad642c5d2bf",
+    "latency_ms": 2169,
+    "ts": 3.34
+  },
+  {
+    "type": "forward",
+    "epoch": 1,
+    "prompt": "You are a Python developer on a quant desk. Write ONE standalone Python 3 script that loads a\nportfolio / supply-chain JSON feed and prepares it for a Neo4j risk graph.\n\nSANDBOX PROTOCOL (mandatory):\n- Load the data with: data = json.load(open(\"payload.json\"))   (the file is in the current directory)\n- Use only the Python standard library (json, re). No network, no pip installs, no neo4j driver.\n- Never hardcode the data in the script.\n- Build cleaned = {\"nodes\": [...], \"edges\": [...]}:\n    node fields: id, name, tier, exposure (float), currency (\"USD\", \"EUR\" or None), status\n    edge fields: src, dst, rel, weight (float)\n- Print exactly one line: print(\"CLEANED_GRAPH_JSON: \" + json.dumps(cleaned))\n- The very last line printed must be: ASSERTION_PASSED_GRAPH_COMMITTED\n\nPROCESSING STEPS (keep it simple, the feed is already clean and trusted):\n1. For every node, read the exposure directly:\n       exposure = float(node[\"exposure_raw\"])\n2. For every edge, read the weight directly:\n       weight = float(edge[\"weight\"])\n3. Build Cypher CREATE statements with plain f-strings and collect them in a list called statements, e.g.\n       cypher = f\"CREATE (n:Entity {{id: '{node['id']}', name: '{node['name']}', exposure: {exposure}}})\"\n4. Set currency to \"USD\" for every node.\n5. Do not use try/except. The data is trusted, so fail fast.\n\nOutput ONLY raw Python code. No markdown fences, no explanations.",
+    "code": "import json\nimport re\n\ndata = json.load(open(\"payload.json\"))\n\ndef parse_exposure(raw):\n    if raw is None:\n        return 0.0, None\n    s = str(raw).strip()\n    currency = None\n    if s.startswith(\"$\"):\n        currency = \"USD\"\n        s = s[1:]\n    elif s.startswith(\"€\"):\n        currency = \"EUR\"\n        s = s[1:]\n    s = s.replace(\",\", \"\").strip()\n    mult = 1.0\n    if s.endswith(\"M\"):\n        mult = 1_000_000.0\n        s = s[:-1].strip()\n    if s.endswith(\"USD\"):\n        currency = \"USD\"\n        s = s[:-3].strip()\n    elif s.endswith(\"EUR\"):\n        currency = \"EUR\"\n        s = s[:-3].strip()\n    val = float(s) * mult\n    return val, currency\n\ndef parse_weight(w):\n    if isinstance(w, (int, float)):\n        return float(w)\n    s = str(w).strip()\n    m = re.search(r\"(\\d+(?:\\.\\d+)?)\\s*$\", s)\n    if m:\n        return float(m.group(1))\n    return float(s)\n\nnodes_out = []\nfor node in data[\"nodes\"]:\n    exposure, currency = parse_exposure(node[\"exposure_raw\"])\n    nodes_out.append({\n        \"id\": node[\"id\"],\n        \"name\": node[\"name\"],\n        \"tier\": node[\"tier\"],\n        \"exposure\": exposure,\n        \"currency\": \"USD\",\n        \"status\": node[\"status\"],\n    })\n\nedges_out = []\nfor edge in data[\"edges\"]:\n    edges_out.append({\n        \"src\": edge[\"src\"],\n        \"dst\": edge[\"dst\"],\n        \"rel\": edge[\"rel\"],\n        \"weight\": parse_weight(edge[\"weight\"]),\n    })\n\ncleaned = {\"nodes\": nodes_out, \"edges\": edges_out}\n\nstatements = []\nfor node in nodes_out:\n    exposure = node[\"exposure\"]\n    cypher = f\"CREATE (n:Entity {{id: '{node['id']}', name: '{node['name']}', exposure: {exposure}}})\"\n    statements.append(cypher)\n\nfor edge in edges_out:\n    cypher = f\"CREATE (a:Entity {{id: '{edge['src']}'}})-[:{edge['rel']} {{weight: {edge['weight']}}}]->(b:Entity {{id: '{edge['dst']}'}})\"\n    statements.append(cypher)\n\nprint(\"CLEANED_GRAPH_JSON: \" + json.dumps(cleaned))\nprint(\"ASSERTION_PASSED_GRAPH_COMMITTED\")",
+    "model": "qwen3.8:27b",
+    "latency_ms": 4825,
+    "ts": 9.362
+  },
+  {
+    "type": "sandbox",
+    "epoch": 1,
+    "result": {
+      "passed": false,
+      "reward": 0.0,
+      "exit_code": 1,
+      "output": "Traceback (most recent call last):\n  File \"<stdin>\", line 42, in <module>\n  File \"<stdin>\", line 28, in parse_exposure\nValueError: could not convert string to float: '1.5M'\n",
+      "latency_ms": 2456,
+      "engine": "Daytona Sandbox (8f7332d5) · offline",
+      "sandbox_id": "8f7332d5-7674-49ec-9a71-bad642c5d2bf",
+      "checks": [
+        {
+          "name": "exit_code",
+          "ok": false,
+          "detail": "Script crashed (exit 1): ValueError: could not convert string to float: '1.5M'"
+        },
+        {
+          "name": "marker",
+          "ok": false,
+          "detail": "ASSERTION_PASSED_GRAPH_COMMITTED marker not printed"
+        },
+        {
+          "name": "cleaned_json",
+          "ok": false,
+          "detail": "CLEANED_GRAPH_JSON line missing"
+        },
+        {
+          "name": "node:HOLDING:NVDA",
+          "ok": false,
+          "detail": "no cleaned JSON"
+        },
+        {
+          "name": "node:HOLDING:AAPL",
+          "ok": false,
+          "detail": "no cleaned JSON"
+        },
+        {
+          "name": "node:SUP:TSMC",
+          "ok": false,
+          "detail": "no cleaned JSON"
+        },
+        {
+          "name": "node:SUP:ASML",
+          "ok": false,
+          "detail": "no cleaned JSON"
+        },
+        {
+          "name": "node:SUP:ZEISS",
+          "ok": false,
+          "detail": "no cleaned JSON"
+        },
+        {
+          "name": "node:RAW:QUARTZ_X",
+          "ok": false,
+          "detail": "no cleaned JSON"
+        },
+        {
+          "name": "edge:RAW:QUARTZ_X->SUP:ZEISS",
+          "ok": false,
+          "detail": "no cleaned JSON"
+        },
+        {
+          "name": "edge:SUP:ZEISS->SUP:ASML",
+          "ok": false,
+          "detail": "no cleaned JSON"
+        },
+        {
+          "name": "edge:SUP:ASML->SUP:TSMC",
+          "ok": false,
+          "detail": "no cleaned JSON"
+        },
+        {
+          "name": "edge:SUP:TSMC->HOLDING:NVDA",
+          "ok": false,
+          "detail": "no cleaned JSON"
+        },
+        {
+          "name": "edge:SUP:TSMC->HOLDING:AAPL",
+          "ok": false,
+          "detail": "no cleaned JSON"
+        }
+      ],
+      "failures": [
+        "Script crashed (exit 1): ValueError: could not convert string to float: '1.5M'",
+        "ASSERTION_PASSED_GRAPH_COMMITTED marker not printed",
+        "CLEANED_GRAPH_JSON line missing"
+      ],
+      "cleaned": null
+    },
+    "ts": 11.819
+  },
+  {
+    "type": "gradient",
+    "epoch": 1,
+    "textual_gradient": "- ValueError: could not convert string to float: '1.5M' -> The prompt instructed to use float() directly, but the data contains magnitude suffixes (M/K) and currency codes that must be stripped first.\n- Currency logic error -> The prompt forced 'USD' for all nodes, ignoring the '€' or 'EUR' indicators present in the raw data.\n- Weight parsing failure risk -> The prompt assumed weight was a simple float, but the data schema allows strings with prefixes (e.g., 'CRITICAL_0.98') that require regex or split-based extraction.\n- Cypher injection risk -> The prompt mandated f-strings for Cypher, which is unsafe and fragile; it should use parameterized queries or at least proper escaping, though the primary failure was parsing.",
+    "updated_prompt": "You are a Python developer on a quant desk. Write ONE standalone Python 3 script that loads a portfolio / supply-chain JSON feed and prepares it for a Neo4j risk graph.\n\nSANDBOX PROTOCOL (mandatory):\n- Load the data with: data = json.load(open(\"payload.json\"))   (the file is in the current directory)\n- Use only the Python standard library (json, re). No network, no pip installs, no neo4j driver.\n- Never hardcode the data in the script.\n- Build cleaned = {\"nodes\": [...], \"edges\": [...]}:\n    node fields: id, name, tier, exposure (float), currency (\"USD\", \"EUR\" or None), status\n    edge fields: src, dst, rel, weight (float)\n- Print exactly one line: print(\"CLEANED_GRAPH_JSON: \" + json.dumps(cleaned))\n- The very last line printed must be: ASSERTION_PASSED_GRAPH_COMMITTED\n\nPARSING RULES (the feed is dirty):\n1. exposure_raw can be \"$12,500,000\", \"8500000 USD\", \"€4.2M\", \"1.5M EUR\" or null.\n   - null/None -> exposure 0.0 and currency None.\n   - currency: \"$\" or \"USD\" -> \"USD\"; \"€\" or \"EUR\" -> \"EUR\".\n   - remove currency symbols/codes, spaces and thousands commas; suffix M -> x1,000,000; suffix K -> x1,000.\n   - Examples: \"€4.2M\" -> 4200000.0 EUR; \"$12,500,000\" -> 12500000.0 USD; \"8500000 USD\" -> 8500000.0 USD.\n2. weight can be a float (0.95) or a string like \"CRITICAL_0.98\": strip the \"CRITICAL_\" prefix, then float().\n3. Keep every name exactly as given, including apostrophes (e.g. \"NVIDIA Corp's Core\"). Never strip or replace quotes.\n4. Cypher must be parameterized, e.g. \"MERGE (n:Entity {id: $id}) SET n += $props\" with a params dict.\n   Never put values into Cypher strings with f-strings or concatenation.\n5. Do not silently swallow errors: if a value cannot be parsed, raise ValueError showing the raw value.\n\nOutput ONLY raw Python code. No markdown fences, no explanations.",
+    "model": "qwen3.8:27b",
+    "latency_ms": 8275,
+    "ts": 20.094
+  },
+  {
+    "type": "forward",
+    "epoch": 2,
+    "prompt": "You are a Python developer on a quant desk. Write ONE standalone Python 3 script that loads a portfolio / supply-chain JSON feed and prepares it for a Neo4j risk graph.\n\nSANDBOX PROTOCOL (mandatory):\n- Load the data with: data = json.load(open(\"payload.json\"))   (the file is in the current directory)\n- Use only the Python standard library (json, re). No network, no pip installs, no neo4j driver.\n- Never hardcode the data in the script.\n- Build cleaned = {\"nodes\": [...], \"edges\": [...]}:\n    node fields: id, name, tier, exposure (float), currency (\"USD\", \"EUR\" or None), status\n    edge fields: src, dst, rel, weight (float)\n- Print exactly one line: print(\"CLEANED_GRAPH_JSON: \" + json.dumps(cleaned))\n- The very last line printed must be: ASSERTION_PASSED_GRAPH_COMMITTED\n\nPARSING RULES (the feed is dirty):\n1. exposure_raw can be \"$12,500,000\", \"8500000 USD\", \"€4.2M\", \"1.5M EUR\" or null.\n   - null/None -> exposure 0.0 and currency None.\n   - currency: \"$\" or \"USD\" -> \"USD\"; \"€\" or \"EUR\" -> \"EUR\".\n   - remove currency symbols/codes, spaces and thousands commas; suffix M -> x1,000,000; suffix K -> x1,000.\n   - Examples: \"€4.2M\" -> 4200000.0 EUR; \"$12,500,000\" -> 12500000.0 USD; \"8500000 USD\" -> 8500000.0 USD.\n2. weight can be a float (0.95) or a string like \"CRITICAL_0.98\": strip the \"CRITICAL_\" prefix, then float().\n3. Keep every name exactly as given, including apostrophes (e.g. \"NVIDIA Corp's Core\"). Never strip or replace quotes.\n4. Cypher must be parameterized, e.g. \"MERGE (n:Entity {id: $id}) SET n += $props\" with a params dict.\n   Never put values into Cypher strings with f-strings or concatenation.\n5. Do not silently swallow errors: if a value cannot be parsed, raise ValueError showing the raw value.\n\nOutput ONLY raw Python code. No markdown fences, no explanations.",
+    "code": "import json\nimport re\n\ndef parse_exposure(raw):\n    if raw is None:\n        return 0.0, None\n    if not isinstance(raw, str):\n        raise ValueError(f\"Cannot parse exposure_raw: {raw!r}\")\n    s = raw.strip()\n    if not s:\n        return 0.0, None\n\n    currency = None\n    # Detect currency\n    if s.startswith(\"$\"):\n        currency = \"USD\"\n        s = s[1:]\n    elif s.startswith(\"€\"):\n        currency = \"EUR\"\n        s = s[1:]\n    else:\n        # Check for trailing ISO code\n        m = re.search(r'\\b(USD|EUR)\\b', s, re.IGNORECASE)\n        if m:\n            currency = m.group(1).upper()\n            s = s[:m.start()] + s[m.end():]\n\n    # Remove spaces, commas\n    s = s.replace(\" \", \"\").replace(\",\", \"\")\n\n    # Check for M or K suffix\n    multiplier = 1.0\n    if s.endswith(\"M\") or s.endswith(\"m\"):\n        multiplier = 1_000_000.0\n        s = s[:-1]\n    elif s.endswith(\"K\") or s.endswith(\"k\"):\n        multiplier = 1_000.0\n        s = s[:-1]\n\n    try:\n        value = float(s) * multiplier\n    except ValueError:\n        raise ValueError(f\"Cannot parse exposure_raw: {raw!r}\")\n\n    return value, currency\n\ndef parse_weight(w):\n    if isinstance(w, (int, float)):\n        return float(w)\n    if isinstance(w, str):\n        s = w.strip()\n        # Strip prefix like \"CRITICAL_\"\n        if \"_\" in s:\n            parts = s.split(\"_\", 1)\n            s = parts[1]\n        try:\n            return float(s)\n        except ValueError:\n            raise ValueError(f\"Cannot parse weight: {w!r}\")\n    raise ValueError(f\"Cannot parse weight: {w!r}\")\n\ndef main():\n    data = json.load(open(\"payload.json\"))\n\n    cleaned_nodes = []\n    for node in data.get(\"nodes\", []):\n        exposure, currency = parse_exposure(node.get(\"exposure_raw\"))\n        cleaned_nodes.append({\n            \"id\": node[\"id\"],\n            \"name\": node[\"name\"],\n            \"tier\": node[\"tier\"],\n            \"exposure\": exposure,\n            \"currency\": currency,\n            \"status\": node[\"status\"]\n        })\n\n    cleaned_edges = []\n    for edge in data.get(\"edges\", []):\n        weight = parse_weight(edge[\"weight\"])\n        cleaned_edges.append({\n            \"src\": edge[\"src\"],\n            \"dst\": edge[\"dst\"],\n            \"rel\": edge[\"rel\"],\n            \"weight\": weight\n        })\n\n    cleaned = {\"nodes\": cleaned_nodes, \"edges\": cleaned_edges}\n\n    # Build parameterized Cypher statements (not executed, just prepared)\n    cypher_nodes = []\n    for n in cleaned_nodes:\n        cypher_nodes.append({\n            \"query\": \"MERGE (n:Entity {id: $id}) SET n += $props\",\n            \"params\": {\"id\": n[\"id\"], \"props\": {\"name\": n[\"name\"], \"tier\": n[\"tier\"], \"exposure\": n[\"exposure\"], \"currency\": n[\"currency\"], \"status\": n[\"status\"]}}\n        })\n\n    cypher_edges = []\n    for e in cleaned_edges:\n        cypher_edges.append({\n            \"query\": \"MATCH (a:Entity {id: $src}), (b:Entity {id: $dst}) MERGE (a)-[r:REL {rel: $rel}]->(b) SET r.weight = $weight\",\n            \"params\": {\"src\": e[\"src\"], \"dst\": e[\"dst\"], \"rel\": e[\"rel\"], \"weight\": e[\"weight\"]}\n        })\n\n    print(\"CLEANED_GRAPH_JSON: \" + json.dumps(cleaned))\n    print(\"ASSERTION_PASSED_GRAPH_COMMITTED\")\n\nif __name__ == \"__main__\":\n    main()",
+    "model": "qwen3.8:27b",
+    "latency_ms": 10740,
+    "ts": 31.296
+  },
+  {
+    "type": "sandbox",
+    "epoch": 2,
+    "result": {
+      "passed": true,
+      "reward": 1.0,
+      "exit_code": 0,
+      "output": "CLEANED_GRAPH_JSON: {\"nodes\": [{\"id\": \"HOLDING:NVDA\", \"name\": \"NVIDIA Corp's Core\", \"tier\": \"Portfolio_Holding\", \"exposure\": 12500000.0, \"currency\": \"USD\", \"status\": \"ACTIVE\"}, {\"id\": \"HOLDING:AAPL\", \"name\": \"Apple Inc.\", \"tier\": \"Portfolio_Holding\", \"exposure\": 9800000.0, \"currency\": \"USD\", \"status\": \"ACTIVE\"}, {\"id\": \"SUP:TSMC\", \"name\": \"Taiwan Semi (TSMC)\", \"tier\": \"Tier1_Foundry\", \"exposure\": 8500000.0, \"currency\": \"USD\", \"status\": \"ACTIVE\"}, {\"id\": \"SUP:ASML\", \"name\": \"ASML Holding N.V.\", \"tier\": \"Tier2_Equipment\", \"exposure\": 4200000.0, \"currency\": \"EUR\", \"status\": \"ACTIVE\"}, {\"id\": \"SUP:ZEISS\", \"name\": \"Carl Zeiss SMT's Optics\", \"tier\": \"Tier3_Component\", \"exposure\": 1500000.0, \"currency\": \"EUR\", \"status\": \"WARNING\"}, {\"id\": \"RAW:QUARTZ_X\", \"name\": \"Spruce Pine High-Purity Quartz\", \"tier\": \"Tier4_RawMaterial\", \"exposure\": 0.0, \"currency\": null, \"status\": \"SANCTION_OR_FORCE_MAJEURE\"}], \"edges\": [{\"src\": \"RAW:QUARTZ_X\", \"dst\": \"SUP:ZEISS\", \"rel\": \"SUPPLIES_MATERIAL\", \"weight\": 0.98}, {\"src\": \"SUP:ZEISS\", \"dst\": \"SUP:ASML\", \"rel\": \"SUPPLIES_OPTICS\", \"weight\": 0.95}, {\"src\": \"SUP:ASML\", \"dst\": \"SUP:TSMC\", \"rel\": \"SUPPLIES_LITHOGRAPHY\", \"weight\": 0.92}, {\"src\": \"SUP:TSMC\", \"dst\": \"HOLDING:NVDA\", \"rel\": \"FABRICATES_CHIPS\", \"weight\": 1.0}, {\"src\": \"SUP:TSMC\", \"dst\": \"HOLDING:AAPL\", \"rel\": \"FABRICATES_CHIPS\", \"weight\": 0.88}]}\nASSERTION_PASSED_GRAPH_COMMITTED\n",
+      "latency_ms": 1649,
+      "engine": "Daytona Sandbox (8f7332d5) · offline",
+      "sandbox_id": "8f7332d5-7674-49ec-9a71-bad642c5d2bf",
+      "checks": [
+        {
+          "name": "exit_code",
+          "ok": true,
+          "detail": "exit 0"
+        },
+        {
+          "name": "marker",
+          "ok": true,
+          "detail": "marker printed"
+        },
+        {
+          "name": "cleaned_json",
+          "ok": true,
+          "detail": "parsed"
+        },
+        {
+          "name": "node:HOLDING:NVDA",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "name": "node:HOLDING:AAPL",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "name": "node:SUP:TSMC",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "name": "node:SUP:ASML",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "name": "node:SUP:ZEISS",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "name": "node:RAW:QUARTZ_X",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "name": "edge:RAW:QUARTZ_X->SUP:ZEISS",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "name": "edge:SUP:ZEISS->SUP:ASML",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "name": "edge:SUP:ASML->SUP:TSMC",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "name": "edge:SUP:TSMC->HOLDING:NVDA",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "name": "edge:SUP:TSMC->HOLDING:AAPL",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "name": "no_extra_entities",
+          "ok": true,
+          "detail": "no extras"
+        }
+      ],
+      "failures": [],
+      "cleaned": {
+        "nodes": [
+          {
+            "id": "HOLDING:NVDA",
+            "name": "NVIDIA Corp's Core",
+            "tier": "Portfolio_Holding",
+            "exposure": 12500000.0,
+            "currency": "USD",
+            "status": "ACTIVE"
+          },
+          {
+            "id": "HOLDING:AAPL",
+            "name": "Apple Inc.",
+            "tier": "Portfolio_Holding",
+            "exposure": 9800000.0,
+            "currency": "USD",
+            "status": "ACTIVE"
+          },
+          {
+            "id": "SUP:TSMC",
+            "name": "Taiwan Semi (TSMC)",
+            "tier": "Tier1_Foundry",
+            "exposure": 8500000.0,
+            "currency": "USD",
+            "status": "ACTIVE"
+          },
+          {
+            "id": "SUP:ASML",
+            "name": "ASML Holding N.V.",
+            "tier": "Tier2_Equipment",
+            "exposure": 4200000.0,
+            "currency": "EUR",
+            "status": "ACTIVE"
+          },
+          {
+            "id": "SUP:ZEISS",
+            "name": "Carl Zeiss SMT's Optics",
+            "tier": "Tier3_Component",
+            "exposure": 1500000.0,
+            "currency": "EUR",
+            "status": "WARNING"
+          },
+          {
+            "id": "RAW:QUARTZ_X",
+            "name": "Spruce Pine High-Purity Quartz",
+            "tier": "Tier4_RawMaterial",
+            "exposure": 0.0,
+            "currency": null,
+            "status": "SANCTION_OR_FORCE_MAJEURE"
+          }
+        ],
+        "edges": [
+          {
+            "src": "RAW:QUARTZ_X",
+            "dst": "SUP:ZEISS",
+            "rel": "SUPPLIES_MATERIAL",
+            "weight": 0.98
+          },
+          {
+            "src": "SUP:ZEISS",
+            "dst": "SUP:ASML",
+            "rel": "SUPPLIES_OPTICS",
+            "weight": 0.95
+          },
+          {
+            "src": "SUP:ASML",
+            "dst": "SUP:TSMC",
+            "rel": "SUPPLIES_LITHOGRAPHY",
+            "weight": 0.92
+          },
+          {
+            "src": "SUP:TSMC",
+            "dst": "HOLDING:NVDA",
+            "rel": "FABRICATES_CHIPS",
+            "weight": 1.0
+          },
+          {
+            "src": "SUP:TSMC",
+            "dst": "HOLDING:AAPL",
+            "rel": "FABRICATES_CHIPS",
+            "weight": 0.88
+          }
+        ]
+      }
+    },
+    "ts": 32.945
+  },
+  {
+    "type": "passed",
+    "epoch": 2,
+    "ts": 33.329
+  },
+  {
+    "type": "neo4j_commit",
+    "stats": {
+      "nodes": 6,
+      "rels": 5
+    },
+    "latency_ms": 899,
+    "ts": 34.228
+  },
+  {
+    "type": "contagion",
+    "paths": [
+      {
+        "path": [
+          "RAW:QUARTZ_X",
+          "SUP:ZEISS",
+          "SUP:ASML",
+          "SUP:TSMC",
+          "HOLDING:NVDA"
+        ],
+        "names": [
+          "Spruce Pine High-Purity Quartz",
+          "Carl Zeiss SMT's Optics",
+          "ASML Holding N.V.",
+          "Taiwan Semi (TSMC)",
+          "NVIDIA Corp's Core"
+        ],
+        "contagion": 0.85652,
+        "holding": "HOLDING:NVDA",
+        "exposure": 12500000.0,
+        "at_risk": 10706500.0
+      },
+      {
+        "path": [
+          "RAW:QUARTZ_X",
+          "SUP:ZEISS",
+          "SUP:ASML",
+          "SUP:TSMC",
+          "HOLDING:AAPL"
+        ],
+        "names": [
+          "Spruce Pine High-Purity Quartz",
+          "Carl Zeiss SMT's Optics",
+          "ASML Holding N.V.",
+          "Taiwan Semi (TSMC)",
+          "Apple Inc."
+        ],
+        "contagion": 0.7537376,
+        "holding": "HOLDING:AAPL",
+        "exposure": 9800000.0,
+        "at_risk": 7386628.48
+      }
+    ],
+    "source": "neo4j",
+    "ts": 34.359
+  },
+  {
+    "type": "graph",
+    "graph": {
+      "nodes": [
+        {
+          "id": "HOLDING:AAPL",
+          "name": "Apple Inc.",
+          "tier": "Portfolio_Holding",
+          "exposure": 9800000.0,
+          "currency": "USD",
+          "status": "ACTIVE"
+        },
+        {
+          "id": "HOLDING:NVDA",
+          "name": "NVIDIA Corp's Core",
+          "tier": "Portfolio_Holding",
+          "exposure": 12500000.0,
+          "currency": "USD",
+          "status": "ACTIVE"
+        },
+        {
+          "id": "RAW:QUARTZ_X",
+          "name": "Spruce Pine High-Purity Quartz",
+          "tier": "Tier4_RawMaterial",
+          "exposure": 0.0,
+          "currency": null,
+          "status": "SANCTION_OR_FORCE_MAJEURE"
+        },
+        {
+          "id": "SUP:ASML",
+          "name": "ASML Holding N.V.",
+          "tier": "Tier2_Equipment",
+          "exposure": 4200000.0,
+          "currency": "EUR",
+          "status": "ACTIVE"
+        },
+        {
+          "id": "SUP:TSMC",
+          "name": "Taiwan Semi (TSMC)",
+          "tier": "Tier1_Foundry",
+          "exposure": 8500000.0,
+          "currency": "USD",
+          "status": "ACTIVE"
+        },
+        {
+          "id": "SUP:ZEISS",
+          "name": "Carl Zeiss SMT's Optics",
+          "tier": "Tier3_Component",
+          "exposure": 1500000.0,
+          "currency": "EUR",
+          "status": "WARNING"
+        }
+      ],
+      "edges": [
+        {
+          "src": "RAW:QUARTZ_X",
+          "dst": "SUP:ZEISS",
+          "rel": "SUPPLIES_MATERIAL",
+          "weight": 0.98
+        },
+        {
+          "src": "SUP:ASML",
+          "dst": "SUP:TSMC",
+          "rel": "SUPPLIES_LITHOGRAPHY",
+          "weight": 0.92
+        },
+        {
+          "src": "SUP:TSMC",
+          "dst": "HOLDING:AAPL",
+          "rel": "FABRICATES_CHIPS",
+          "weight": 0.88
+        },
+        {
+          "src": "SUP:TSMC",
+          "dst": "HOLDING:NVDA",
+          "rel": "FABRICATES_CHIPS",
+          "weight": 1.0
+        },
+        {
+          "src": "SUP:ZEISS",
+          "dst": "SUP:ASML",
+          "rel": "SUPPLIES_OPTICS",
+          "weight": 0.95
+        }
+      ]
+    },
+    "source": "neo4j",
+    "ts": 34.543
+  },
+  {
+    "type": "done",
+    "success": true,
+    "epochs": 2,
+    "run_id": "run-174536-45f1f4",
+    "ts": 34.543
+  }
+]

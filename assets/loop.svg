@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="300" viewBox="0 0 900 300" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <title>EvoGraph-Quant self-evolution loop</title>
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#9AA4BF"/></marker>
+  </defs>
+  <rect x="0" y="0" width="900" height="300" rx="18" fill="#0B1020"/>
+  <text x="30" y="38" font-size="18" font-weight="700" fill="#E6EAF2">Self-evolution loop</text>
+  <text x="870" y="38" font-size="12" fill="#9AA4BF" text-anchor="end">every epoch is executed in a Daytona sandbox</text>
+
+  <!-- connectors -->
+  <path d="M184,155 L200,155" stroke="#9AA4BF" stroke-width="2" marker-end="url(#arr)"/>
+  <path d="M356,155 L372,155" stroke="#9AA4BF" stroke-width="2" marker-end="url(#arr)"/>
+  <path d="M528,155 L544,155" stroke="#9AA4BF" stroke-width="2" marker-end="url(#arr)"/>
+  <path d="M700,155 L716,155" stroke="#9AA4BF" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- 1. Epoch 1 (fail) -->
+  <rect x="30" y="60" width="152" height="190" rx="14" fill="#1E1216" stroke="#F87171" stroke-opacity="0.7" stroke-width="1.5"/>
+  <circle cx="106" cy="102" r="20" fill="#F87171"/>
+  <path d="M98,94 L114,110 M114,94 L98,110" stroke="#1E1216" stroke-width="3.2" stroke-linecap="round"/>
+  <text x="106" y="148" font-size="15" font-weight="700" fill="#E6EAF2" text-anchor="middle">Epoch 1</text>
+  <text x="106" y="170" font-size="11" fill="#9AA4BF" text-anchor="middle">naive prompt</text>
+  <text x="106" y="188" font-size="10.5" font-family="'JetBrains Mono', SFMono-Regular, Menlo, monospace" fill="#FCA5A5" text-anchor="middle">float('$12,500,000')</text>
+  <rect x="36" y="210" width="140" height="26" rx="13" fill="#3A161C"/>
+  <text x="106" y="227" font-size="10" font-family="'JetBrains Mono', SFMono-Regular, Menlo, monospace" fill="#FCA5A5" text-anchor="middle">ValueError · exit 1</text>
+
+  <!-- 2. Gradient -->
+  <rect x="202" y="60" width="152" height="190" rx="14" fill="#1A1430" stroke="#C084FC" stroke-opacity="0.7" stroke-width="1.5"/>
+  <circle cx="278" cy="102" r="20" fill="#C084FC"/>
+  <path d="M268,94 L288,94 L278,112 Z" fill="none" stroke="#1A1430" stroke-width="3" stroke-linejoin="round"/>
+  <text x="278" y="148" font-size="15" font-weight="700" fill="#E6EAF2" text-anchor="middle">Gradient</text>
+  <text x="278" y="170" font-size="11" fill="#9AA4BF" text-anchor="middle">diagnose traceback</text>
+  <text x="278" y="188" font-size="11" fill="#9AA4BF" text-anchor="middle">+ failed checks</text>
+  <rect x="214" y="210" width="128" height="26" rx="13" fill="#2A1F45"/>
+  <text x="278" y="227" font-size="11" font-family="'JetBrains Mono', SFMono-Regular, Menlo, monospace" fill="#E9D5FF" text-anchor="middle">backward pass</text>
+
+  <!-- 3. Prompt v2 -->
+  <rect x="374" y="60" width="152" height="190" rx="14" fill="#141833" stroke="#818CF8" stroke-opacity="0.7" stroke-width="1.5"/>
+  <circle cx="450" cy="102" r="20" fill="#818CF8"/>
+  <rect x="441" y="91" width="18" height="22" rx="2" fill="none" stroke="#141833" stroke-width="2.5"/>
+  <path d="M445,98 L455,98 M445,103 L455,103 M445,108 L451,108" stroke="#141833" stroke-width="2"/>
+  <text x="450" y="148" font-size="15" font-weight="700" fill="#E6EAF2" text-anchor="middle">Prompt v2</text>
+  <text x="450" y="170" font-size="11" fill="#9AA4BF" text-anchor="middle">regex currency parser</text>
+  <text x="450" y="188" font-size="11" fill="#9AA4BF" text-anchor="middle">strip CRITICAL_ prefix</text>
+  <rect x="380" y="210" width="140" height="26" rx="13" fill="#1F2450"/>
+  <text x="450" y="227" font-size="10" font-family="'JetBrains Mono', SFMono-Regular, Menlo, monospace" fill="#C7D2FE" text-anchor="middle">AdalFlow Parameter</text>
+
+  <!-- 4. Epoch 2 (pass) -->
+  <rect x="546" y="60" width="152" height="190" rx="14" fill="#0F1F17" stroke="#4ADE80" stroke-opacity="0.7" stroke-width="1.5"/>
+  <circle cx="622" cy="102" r="20" fill="#4ADE80"/>
+  <path d="M612,103 L619,110 L633,95" fill="none" stroke="#0F1F17" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="622" y="148" font-size="15" font-weight="700" fill="#E6EAF2" text-anchor="middle">Epoch 2</text>
+  <text x="622" y="170" font-size="11" fill="#9AA4BF" text-anchor="middle">exit 0</text>
+  <text x="622" y="188" font-size="11" fill="#9AA4BF" text-anchor="middle">all checks pass</text>
+  <rect x="558" y="210" width="128" height="26" rx="13" fill="#163324"/>
+  <text x="622" y="227" font-size="11" font-family="'JetBrains Mono', SFMono-Regular, Menlo, monospace" fill="#BBF7D0" text-anchor="middle">reward 1.0</text>
+
+  <!-- 5. Neo4j -->
+  <rect x="718" y="60" width="152" height="190" rx="14" fill="#0E1E22" stroke="#2DD4BF" stroke-opacity="0.7" stroke-width="1.5"/>
+  <circle cx="794" cy="102" r="20" fill="#2DD4BF"/>
+  <g stroke="#0E1E22" stroke-width="2">
+    <line x1="785" y1="108" x2="794" y2="94"/>
+    <line x1="794" y1="94" x2="803" y2="108"/>
+    <line x1="785" y1="108" x2="803" y2="108"/>
+  </g>
+  <circle cx="785" cy="108" r="3.5" fill="#0E1E22"/>
+  <circle cx="794" cy="94" r="3.5" fill="#0E1E22"/>
+  <circle cx="803" cy="108" r="3.5" fill="#0E1E22"/>
+  <text x="794" y="148" font-size="15" font-weight="700" fill="#E6EAF2" text-anchor="middle">Neo4j</text>
+  <text x="794" y="170" font-size="11" fill="#9AA4BF" text-anchor="middle">6 nodes · 5 rels</text>
+  <text x="794" y="188" font-size="11" fill="#9AA4BF" text-anchor="middle">multi-hop contagion</text>
+  <rect x="730" y="210" width="128" height="26" rx="13" fill="#123236"/>
+  <text x="794" y="227" font-size="11" font-family="'JetBrains Mono', SFMono-Regular, Menlo, monospace" fill="#99F6E4" text-anchor="middle">$18.1M at risk</text>
+
+  <text x="30" y="280" font-size="11.5" fill="#6B7699">loss = traceback + failed checks → textual gradient → prompt v2 → re-run in sandbox → commit only verified data</text>
+</svg>

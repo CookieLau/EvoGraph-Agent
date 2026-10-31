@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="300" viewBox="0 0 900 300" font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <title>One evolution step (light)</title>
+  <defs>
+    <marker id="l-ink" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#1F1D1A"/></marker>
+  </defs>
+  <rect x="0" y="0" width="900" height="300" fill="#F7F3EA"/>
+  <text x="30" y="46" font-family="Georgia, 'Times New Roman', serif" font-size="22" fill="#1F1D1A">One evolution step, as measured</text>
+
+  <!-- 1 epoch 1 -->
+  <rect x="30" y="76" width="140" height="150" rx="8" fill="#FFFDF8" stroke="#B8432A" stroke-width="1.5"/>
+  <text x="46" y="106" font-family="Georgia, serif" font-size="17" fill="#1F1D1A">Epoch 1</text>
+  <text x="46" y="130" font-size="14" fill="#B8432A">failed</text>
+  <text x="46" y="156" font-family="ui-monospace, Menlo, monospace" font-size="12" fill="#3A362F">ValueError</text>
+  <text x="46" y="174" font-family="ui-monospace, Menlo, monospace" font-size="12" fill="#3A362F">'1.5M'</text>
+  <text x="46" y="204" font-size="13" fill="#6B655B">reward 0.0</text>
+
+  <!-- 2 gradient -->
+  <rect x="207" y="76" width="140" height="150" rx="8" fill="#FFFDF8" stroke="#D8D0C0"/>
+  <text x="223" y="106" font-family="Georgia, serif" font-size="17" fill="#1F1D1A">Textual</text>
+  <text x="223" y="126" font-family="Georgia, serif" font-size="17" fill="#1F1D1A">gradient</text>
+  <text x="223" y="156" font-size="13" fill="#6B655B">Nosana backward</text>
+  <text x="223" y="204" font-size="13" fill="#6B655B">8.3 s</text>
+
+  <!-- 3 prompt v2 -->
+  <rect x="384" y="76" width="140" height="150" rx="8" fill="#FFFDF8" stroke="#D8D0C0"/>
+  <text x="400" y="106" font-family="Georgia, serif" font-size="17" fill="#1F1D1A">Prompt v2</text>
+  <text x="400" y="156" font-size="13" fill="#6B655B">AdalFlow</text>
+  <text x="400" y="174" font-size="13" fill="#6B655B">Parameter</text>
+
+  <!-- 4 epoch 2 -->
+  <rect x="561" y="76" width="140" height="150" rx="8" fill="#FFFDF8" stroke="#2E6B45" stroke-width="1.5"/>
+  <text x="577" y="106" font-family="Georgia, serif" font-size="17" fill="#1F1D1A">Epoch 2</text>
+  <text x="577" y="130" font-size="14" fill="#2E6B45">passed</text>
+  <text x="577" y="156" font-size="13" fill="#6B655B">Offline sandbox</text>
+  <text x="577" y="204" font-size="13" fill="#6B655B">reward 1.0</text>
+
+  <!-- 5 neo4j -->
+  <rect x="738" y="76" width="140" height="150" rx="8" fill="#FFFDF8" stroke="#D8D0C0"/>
+  <text x="754" y="106" font-family="Georgia, serif" font-size="17" fill="#1F1D1A">Neo4j</text>
+  <text x="754" y="130" font-size="13" fill="#6B655B">6 nodes, 5 links</text>
+  <text x="754" y="166" font-family="Georgia, serif" font-size="18" fill="#B8432A">$18.1M</text>
+  <text x="754" y="186" font-size="13" fill="#B8432A">at risk</text>
+
+  <!-- arrows -->
+  <line x1="172" y1="151" x2="203" y2="151" stroke="#1F1D1A" stroke-width="1.6" marker-end="url(#l-ink)"/>
+  <line x1="349" y1="151" x2="380" y2="151" stroke="#1F1D1A" stroke-width="1.6" marker-end="url(#l-ink)"/>
+  <line x1="526" y1="151" x2="557" y2="151" stroke="#1F1D1A" stroke-width="1.6" marker-end="url(#l-ink)"/>
+  <line x1="703" y1="151" x2="734" y2="151" stroke="#1F1D1A" stroke-width="1.6" marker-end="url(#l-ink)"/>
+
+  <text x="30" y="268" font-size="13" fill="#6B655B">Nosana qwen3.8:27b, an offline Daytona sandbox and Neo4j Aura: 35 s end to end.</text>
+</svg>

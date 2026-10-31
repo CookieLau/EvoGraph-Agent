@@ -1,5 +1,24 @@
+# Python / local env
 .venv/
 __pycache__/
 *.pyc
+.DS_Store
+
+# secrets
 .env
 .streamlit/secrets.toml
+
+# videos are not part of the repo (only the demo flow + UI);
+# keep video/stills/ because slides/index.html uses those PNGs
+*.mp4
+*.webm
+*.mov
+*.mkv
+video/*
+!video/stills/
+node_modules/
+
+# generated at runtime / local-only
+replay/live_*.json
+assets/sponsors/_dl/
+.hallmark/

@@ -1,0 +1,124 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="400" viewBox="0 0 1600 400">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#070B18"/>
+      <stop offset="60%" stop-color="#0D1430"/>
+      <stop offset="100%" stop-color="#151C3F"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="78%" cy="50%" r="45%">
+      <stop offset="0%" stop-color="#22D3EE" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#22D3EE" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="title" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#E0F2FE"/>
+      <stop offset="55%" stop-color="#22D3EE"/>
+      <stop offset="100%" stop-color="#A78BFA"/>
+    </linearGradient>
+    <linearGradient id="shield" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#22D3EE"/>
+      <stop offset="100%" stop-color="#A78BFA"/>
+    </linearGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0 H0 V40" fill="none" stroke="#1E2A55" stroke-width="1" stroke-opacity="0.55"/>
+    </pattern>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="redglow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="7" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 Z" fill="#F87171"/>
+    </marker>
+    <marker id="arrowc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0 0 L10 5 L0 10 Z" fill="#67E8F9"/>
+    </marker>
+  </defs>
+
+  <rect width="1600" height="400" fill="url(#bg)"/>
+  <rect width="1600" height="400" fill="url(#grid)"/>
+  <rect width="1600" height="400" fill="url(#halo)"/>
+
+  <!-- logo mark -->
+  <g transform="translate(70 88) scale(0.42)">
+    <path d="M256 58 L408 112 V250 C408 352 340 418 256 456 C172 418 104 352 104 250 V112 Z"
+          fill="#0E1530" stroke="url(#shield)" stroke-width="16" stroke-linejoin="round" filter="url(#glow)"/>
+    <g fill="none" stroke-width="11" stroke-linecap="round">
+      <path d="M206 128 C306 168 306 208 206 248 C106 288 306 318 256 388" stroke="#22D3EE"/>
+      <path d="M306 128 C206 168 206 208 306 248 C406 288 206 318 256 388" stroke="#A78BFA"/>
+    </g>
+    <g filter="url(#glow)">
+      <circle cx="206" cy="128" r="17" fill="#22D3EE"/>
+      <circle cx="306" cy="128" r="17" fill="#A78BFA"/>
+      <circle cx="206" cy="248" r="15" fill="#A78BFA"/>
+      <circle cx="306" cy="248" r="15" fill="#22D3EE"/>
+      <circle cx="256" cy="388" r="21" fill="#EF4444"/>
+    </g>
+  </g>
+
+  <!-- title -->
+  <g font-family="Inter, -apple-system, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif">
+    <text x="300" y="168" font-size="76" font-weight="800" fill="url(#title)" letter-spacing="-1">EvoGraph-Quant</text>
+    <text x="302" y="218" font-size="30" font-weight="500" fill="#CBD5E1">Self-Evolving Air-Gapped Graph Agent</text>
+
+    <!-- sponsor chips -->
+    <g font-size="20" font-weight="700">
+      <rect x="302" y="252" width="200" height="44" rx="22" fill="#0B1226" stroke="#22D3EE" stroke-width="2"/>
+      <text x="402" y="281" text-anchor="middle" fill="#67E8F9">Daytona Sandbox</text>
+      <text x="522" y="282" text-anchor="middle" fill="#64748B" font-size="24">×</text>
+      <rect x="542" y="252" width="170" height="44" rx="22" fill="#0B1226" stroke="#A78BFA" stroke-width="2"/>
+      <text x="627" y="281" text-anchor="middle" fill="#C4B5FD">Nosana GPU</text>
+      <text x="732" y="282" text-anchor="middle" fill="#64748B" font-size="24">×</text>
+      <rect x="752" y="252" width="170" height="44" rx="22" fill="#0B1226" stroke="#34D399" stroke-width="2"/>
+      <text x="837" y="281" text-anchor="middle" fill="#6EE7B7">Neo4j Graph</text>
+    </g>
+    <text x="302" y="340" font-size="18" fill="#94A3B8">Sandbox-verified ETL · Textual-gradient prompt evolution · Multi-hop contagion risk</text>
+  </g>
+
+  <!-- contagion graph -->
+  <g font-family="Inter, -apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="600">
+    <!-- red contagion path -->
+    <g stroke="#F87171" stroke-width="4" fill="none" filter="url(#redglow)" marker-end="url(#arrow)">
+      <path d="M1060 320 L1150 250"/>
+      <path d="M1172 236 L1262 190"/>
+      <path d="M1286 180 L1376 160"/>
+      <path d="M1402 156 L1488 104"/>
+    </g>
+    <path d="M1402 166 L1488 232" stroke="#67E8F9" stroke-width="3" fill="none" stroke-dasharray="6 6" marker-end="url(#arrowc)" opacity="0.85"/>
+    <!-- side edges for depth -->
+    <g stroke="#334155" stroke-width="2" fill="none">
+      <path d="M1160 244 L1120 150"/>
+      <path d="M1274 186 L1300 290"/>
+      <path d="M1390 160 L1440 300"/>
+    </g>
+    <g fill="#1E293B" stroke="#475569" stroke-width="2">
+      <circle cx="1120" cy="146" r="8"/>
+      <circle cx="1302" cy="296" r="8"/>
+      <circle cx="1442" cy="306" r="8"/>
+    </g>
+    <!-- nodes -->
+    <g filter="url(#glow)">
+      <circle cx="1050" cy="328" r="16" fill="#EF4444"/>
+      <circle cx="1162" cy="242" r="14" fill="#FB923C"/>
+      <circle cx="1274" cy="184" r="14" fill="#A78BFA"/>
+      <circle cx="1390" cy="158" r="16" fill="#818CF8"/>
+      <circle cx="1500" cy="96" r="20" fill="#34D399"/>
+      <circle cx="1500" cy="240" r="18" fill="#34D399"/>
+    </g>
+    <circle cx="1050" cy="328" r="28" fill="none" stroke="#EF4444" stroke-width="2" stroke-opacity="0.6"/>
+    <g fill="#E2E8F0">
+      <text x="1050" y="370" text-anchor="middle">RAW: QUARTZ</text>
+      <text x="1162" y="280" text-anchor="middle">ZEISS</text>
+      <text x="1274" y="222" text-anchor="middle">ASML</text>
+      <text x="1390" y="198" text-anchor="middle">TSMC</text>
+      <text x="1500" y="62" text-anchor="middle">NVDA</text>
+      <text x="1500" y="280" text-anchor="middle">AAPL</text>
+    </g>
+    <g font-size="12" font-weight="700">
+      <text x="1500" y="140" text-anchor="middle" fill="#FCA5A5">$10.7M at risk</text>
+      <text x="1500" y="298" text-anchor="middle" fill="#A5F3FC">$7.4M at risk</text>
+    </g>
+  </g>
+</svg>

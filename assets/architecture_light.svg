@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="700" viewBox="0 0 1400 700" font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <title>EvoGraph-Quant architecture (light)</title>
+  <defs>
+    <marker id="m-ink" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#1F1D1A"/></marker>
+    <marker id="m-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#B8432A"/></marker>
+    <marker id="m-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#2E6B45"/></marker>
+  </defs>
+
+  <rect x="0" y="0" width="1400" height="700" fill="#F7F3EA"/>
+
+  <!-- header -->
+  <text x="40" y="56" font-family="Georgia, 'Times New Roman', serif" font-size="30" fill="#1F1D1A">EvoGraph-Quant</text>
+  <text x="40" y="86" font-size="15" fill="#6B655B">An air-gapped agent that learns to clean confidential data by failing safely in a sandbox</text>
+
+  <!-- 1. confidential feed -->
+  <rect x="40" y="130" width="240" height="270" rx="8" fill="#FFFDF8" stroke="#D8D0C0"/>
+  <text x="60" y="162" font-family="Georgia, serif" font-size="19" fill="#1F1D1A">Confidential feed</text>
+  <text x="60" y="186" font-size="13" fill="#6B655B">Portfolio and supply chain</text>
+  <text x="60" y="204" font-size="13" fill="#6B655B">6 entities, 5 links</text>
+  <line x1="60" y1="220" x2="260" y2="220" stroke="#E4DDCF"/>
+  <text x="60" y="242" font-size="13" fill="#1F1D1A">1. Quotes in names</text>
+  <text x="60" y="260" font-family="ui-monospace, Menlo, monospace" font-size="12" fill="#3A362F">NVIDIA Corp's Core</text>
+  <text x="60" y="290" font-size="13" fill="#1F1D1A">2. Mixed currency, nulls</text>
+  <text x="60" y="308" font-family="ui-monospace, Menlo, monospace" font-size="12" fill="#3A362F">$12,500,000  €4.2M  null</text>
+  <text x="60" y="338" font-size="13" fill="#1F1D1A">3. Prefixed weights</text>
+  <text x="60" y="356" font-family="ui-monospace, Menlo, monospace" font-size="12" fill="#3A362F">CRITICAL_0.98</text>
+
+  <!-- 2. nosana forward -->
+  <rect x="330" y="130" width="260" height="120" rx="8" fill="#FFFDF8" stroke="#D8D0C0"/>
+  <text x="350" y="162" font-family="Georgia, serif" font-size="19" fill="#1F1D1A">Nosana GPU, forward</text>
+  <text x="350" y="186" font-size="13" fill="#6B655B">qwen3.8:27b on an RTX 5090</text>
+  <text x="350" y="206" font-size="13" fill="#1F1D1A">Writes the ETL script</text>
+  <text x="350" y="226" font-size="13" fill="#6B655B">About 5 s per call, thinking off</text>
+
+  <!-- 3. adalflow parameter -->
+  <rect x="330" y="290" width="260" height="110" rx="8" fill="#FFFDF8" stroke="#D8D0C0"/>
+  <text x="350" y="322" font-family="Georgia, serif" font-size="19" fill="#1F1D1A">AdalFlow Parameter</text>
+  <text x="350" y="346" font-size="13" fill="#1F1D1A">The evolvable system prompt</text>
+  <text x="350" y="366" font-size="13" fill="#6B655B">v1 naive, then v2, v3</text>
+  <text x="350" y="384" font-family="ui-monospace, Menlo, monospace" font-size="12" fill="#3A362F">update_value(new_prompt)</text>
+
+  <!-- 4. nosana backward -->
+  <rect x="330" y="470" width="260" height="120" rx="8" fill="#FFFDF8" stroke="#D8D0C0"/>
+  <text x="350" y="502" font-family="Georgia, serif" font-size="19" fill="#1F1D1A">Nosana GPU, backward</text>
+  <text x="350" y="526" font-size="13" fill="#1F1D1A">Textual gradient optimizer</text>
+  <text x="350" y="546" font-size="13" fill="#6B655B">Sees schema, code, traceback</text>
+  <text x="350" y="566" font-size="13" fill="#6B655B">Never the raw payload</text>
+
+  <!-- 5. daytona sandbox -->
+  <rect x="620" y="130" width="280" height="270" rx="8" fill="#FFFDF8" stroke="#1F1D1A" stroke-width="1.5"/>
+  <text x="640" y="162" font-family="Georgia, serif" font-size="19" fill="#1F1D1A">Daytona sandbox</text>
+  <text x="640" y="186" font-family="ui-monospace, Menlo, monospace" font-size="12.5" fill="#B8432A">network_block_all=True</text>
+  <text x="640" y="208" font-size="13" fill="#6B655B">Fresh, offline, about 0.5 s to create</text>
+  <text x="640" y="228" font-size="13" fill="#6B655B">Uploads payload.json</text>
+  <text x="640" y="248" font-size="13" fill="#1F1D1A">code_run: exit code and traceback</text>
+  <line x1="640" y1="266" x2="880" y2="266" stroke="#E4DDCF"/>
+  <text x="640" y="292" font-family="Georgia, serif" font-size="16" fill="#1F1D1A">Ground-truth checker</text>
+  <text x="640" y="314" font-size="13" fill="#1F1D1A">15 checks, reward from 0 to 1</text>
+  <text x="640" y="334" font-size="13" fill="#6B655B">Ignores the script's own claims</text>
+  <text x="640" y="354" font-size="13" fill="#6B655B">Runs on the host, not in the script</text>
+
+  <!-- 6. neo4j -->
+  <rect x="1010" y="130" width="350" height="270" rx="8" fill="#FFFDF8" stroke="#D8D0C0"/>
+  <text x="1030" y="162" font-family="Georgia, serif" font-size="19" fill="#1F1D1A">Neo4j Aura</text>
+  <text x="1030" y="186" font-size="13" fill="#1F1D1A">Parameterized UNWIND and MERGE</text>
+  <text x="1030" y="206" font-size="13" fill="#6B655B">Multi-hop Cypher, reduce() over weights</text>
+  <text x="1030" y="256" font-family="Georgia, serif" font-size="34" fill="#B8432A">$18.1M at risk</text>
+  <text x="1030" y="282" font-size="13" fill="#1F1D1A">NVDA $10.7M and AAPL $7.4M</text>
+  <text x="1030" y="300" font-size="13" fill="#6B655B">Quartz, Zeiss, ASML, TSMC, holding</text>
+  <line x1="1030" y1="318" x2="1340" y2="318" stroke="#E4DDCF"/>
+  <text x="1030" y="342" font-size="13" fill="#1F1D1A">Agent lineage in the same graph</text>
+  <text x="1030" y="362" font-family="ui-monospace, Menlo, monospace" font-size="12" fill="#3A362F">EvoRun, Epoch, PromptVersion</text>
+
+  <!-- arrows: feed to forward -->
+  <line x1="282" y1="190" x2="326" y2="190" stroke="#1F1D1A" stroke-width="1.6" marker-end="url(#m-ink)"/>
+  <!-- forward to daytona -->
+  <line x1="592" y1="190" x2="616" y2="190" stroke="#1F1D1A" stroke-width="1.6" marker-end="url(#m-ink)"/>
+  <!-- daytona to neo4j (pass) -->
+  <line x1="902" y1="190" x2="1006" y2="190" stroke="#2E6B45" stroke-width="2" marker-end="url(#m-green)"/>
+  <text x="922" y="180" font-size="12.5" fill="#2E6B45">passed</text>
+  <text x="910" y="212" font-size="11.5" fill="#2E6B45">only verified data</text>
+  <text x="910" y="227" font-size="11.5" fill="#2E6B45">is committed</text>
+
+  <!-- daytona to backward (fail) -->
+  <polyline points="780,402 780,530 594,530" fill="none" stroke="#B8432A" stroke-width="2" marker-end="url(#m-red)"/>
+  <text x="790" y="462" font-size="12.5" fill="#B8432A">failed</text>
+  <text x="605" y="552" font-size="12" fill="#B8432A">loss = traceback + failed checks</text>
+
+  <!-- backward to parameter -->
+  <line x1="460" y1="468" x2="460" y2="404" stroke="#1F1D1A" stroke-width="1.6" marker-end="url(#m-ink)"/>
+  <text x="472" y="440" font-size="12" fill="#1F1D1A">textual gradient</text>
+  <!-- parameter to forward -->
+  <line x1="460" y1="288" x2="460" y2="254" stroke="#1F1D1A" stroke-width="1.6" marker-end="url(#m-ink)"/>
+  <text x="472" y="276" font-size="12" fill="#1F1D1A">prompt v2</text>
+
+  <!-- footer -->
+  <line x1="40" y1="626" x2="1360" y2="626" stroke="#D8D0C0"/>
+  <text x="40" y="656" font-size="13" fill="#6B655B">Measured on 31 Oct 2026: a full run takes 35 s end to end. Six parallel sandboxes finish in 4.9 s against 21.0 s run one by one.</text>
+</svg>

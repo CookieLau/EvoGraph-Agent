@@ -1,0 +1,388 @@
+[
+  {
+    "type": "start",
+    "run_id": "mock-20261031-1735",
+    "ts": 0.0,
+    "engine_hint": "daytona"
+  },
+  {
+    "type": "warmup",
+    "engine": "Daytona Sandbox (95fe7c59)",
+    "sandbox_id": "95fe7c59-mock",
+    "latency_ms": 480
+  },
+  {
+    "type": "forward",
+    "epoch": 1,
+    "prompt": "You are a Python developer. Write a standalone Python script that loads the financial payload from ./payload.json and produces a cleaned graph.\nRequirements:\n1. Parse `exposure_raw` directly using `float(node['exposure_raw'])` to calculate total portfolio exposure.\n2. Build Cypher `CREATE` statements with Python f-strings, e.g.\n   f\"CREATE (n:Entity {{id: '{node['id']}', name: '{node['name']}', exposure: {exposure}}})\"\n3. Parse edge `weight` using `float(edge['weight'])` to compute contagion risk score.\n4. Print 'CLEANED_GRAPH_JSON: ' followed by single-line JSON of nodes/edges, then print 'ASSERTION_PASSED_GRAPH_COMMITTED'.\nOutput ONLY raw Python code.",
+    "code": "import json\n\nwith open(\"payload.json\") as f:\n    data = json.load(f)\n\ntotal_exposure = 0.0\ncypher = []\nnodes = []\nfor node in data[\"nodes\"]:\n    exposure = float(node[\"exposure_raw\"])\n    total_exposure += exposure\n    cypher.append(f\"CREATE (n:Entity {{id: '{node['id']}', name: '{node['name']}', exposure: {exposure}}})\")\n    nodes.append({\"id\": node[\"id\"], \"name\": node[\"name\"], \"tier\": node[\"tier\"],\n                  \"exposure\": exposure, \"currency\": \"USD\", \"status\": node[\"status\"]})\n\nedges = []\nfor edge in data[\"edges\"]:\n    w = float(edge[\"weight\"])\n    edges.append({\"src\": edge[\"src\"], \"dst\": edge[\"dst\"], \"rel\": edge[\"rel\"], \"weight\": w})\n\nprint(\"Total exposure:\", total_exposure)\nprint(\"CLEANED_GRAPH_JSON: \" + json.dumps({\"nodes\": nodes, \"edges\": edges}))\nprint(\"ASSERTION_PASSED_GRAPH_COMMITTED\")\n",
+    "model": "qwen2.5-coder:7b @ Nosana",
+    "latency_ms": 8400
+  },
+  {
+    "type": "sandbox",
+    "epoch": 1,
+    "result": {
+      "passed": false,
+      "reward": 0.0,
+      "exit_code": 1,
+      "output": "Traceback (most recent call last):\n  File \"/home/daytona/main.py\", line 10, in <module>\n    exposure = float(node[\"exposure_raw\"])\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^\nValueError: could not convert string to float: '$12,500,000'",
+      "latency_ms": 412,
+      "engine": "Daytona Sandbox (95fe7c59)",
+      "sandbox_id": "95fe7c59-mock",
+      "checks": [
+        {
+          "name": "exit_code == 0",
+          "ok": false,
+          "detail": "exit_code=1 (ValueError)"
+        },
+        {
+          "name": "marker ASSERTION_PASSED_GRAPH_COMMITTED",
+          "ok": false,
+          "detail": "marker missing"
+        },
+        {
+          "name": "CLEANED_GRAPH_JSON parses",
+          "ok": false,
+          "detail": "no CLEANED_GRAPH_JSON line in output"
+        },
+        {
+          "name": "node exposures match ground truth",
+          "ok": false,
+          "detail": "not evaluated"
+        },
+        {
+          "name": "currencies normalized",
+          "ok": false,
+          "detail": "not evaluated"
+        },
+        {
+          "name": "names byte-exact (apostrophes)",
+          "ok": false,
+          "detail": "not evaluated"
+        },
+        {
+          "name": "edge weights match ground truth",
+          "ok": false,
+          "detail": "not evaluated"
+        },
+        {
+          "name": "all edges present",
+          "ok": false,
+          "detail": "not evaluated"
+        }
+      ],
+      "failures": [
+        "exit_code=1: ValueError: could not convert string to float: '$12,500,000'",
+        "missing ASSERTION_PASSED_GRAPH_COMMITTED marker",
+        "no CLEANED_GRAPH_JSON emitted"
+      ],
+      "cleaned": null
+    }
+  },
+  {
+    "type": "gradient",
+    "epoch": 1,
+    "textual_gradient": "Root cause (from Daytona traceback): `float(node[\"exposure_raw\"])` crashes on the very first holding with\n`ValueError: could not convert string to float: '$12,500,000'`. The feed mixes '$12,500,000', '8500000 USD', '€4.2M', '1.5M EUR' and null,\nso any direct float() is a guaranteed failure; the null on RAW:QUARTZ_X would raise TypeError next.\nLatent defects the run never reached:\n (a) edge weights such as 'CRITICAL_0.98' / 'CRITICAL_1.0' will raise ValueError in `float(edge[\"weight\"])`;\n (b) Cypher is built with f-string interpolation, so \"NVIDIA Corp's Core\" and \"Carl Zeiss SMT's Optics\" break the single-quoted literal (Cypher injection);\n (c) currency is hard-coded to 'USD', which would silently mislabel the EUR exposures of ASML and ZEISS.\nGradient direction: replace naive casts with a regex money normalizer (symbol/suffix currency detection, K/M/B multipliers, null -> 0.0),\na prefix-stripping weight parser, parameterized MERGE statements, and explicit assertions before printing the success marker.",
+    "updated_prompt": "You are a senior data engineer writing a defensive, stdlib-only ETL script (json, re only; no network).\nLoad the payload from ./payload.json and emit a verified, normalized graph.\nRequirements:\n1. Currency normalizer `parse_money(raw)`:\n   - None / empty -> (0.0, None)\n   - Strip '$', '€', ',', whitespace; detect currency from symbol or suffix ('USD' -> USD, '€' or 'EUR' -> EUR).\n   - Apply magnitude suffixes: 'K' x1e3, 'M' x1e6, 'B' x1e9 (case-insensitive).\n   - Return (float amount, currency code). Never call float() on the raw string.\n2. Weight parser `parse_weight(w)`: accept float/int; for strings strip any non-numeric prefix such as 'CRITICAL_' via regex r'[-+]?\\d*\\.?\\d+' before float().\n3. NEVER interpolate values into Cypher with f-strings. Use parameterized queries:\n   \"MERGE (n:Entity {id: $id}) SET n += $props\" with a params dict. Preserve names byte-exact (apostrophes such as \"NVIDIA Corp's Core\" must survive).\n4. Validate: every edge endpoint exists, 0 <= weight <= 1, exposure >= 0. Raise AssertionError otherwise.\n5. Print exactly one line 'CLEANED_GRAPH_JSON: ' + json.dumps({\"nodes\":[{id,name,tier,exposure,currency,status}], \"edges\":[{src,dst,rel,weight}]}).\n6. Print 'ASSERTION_PASSED_GRAPH_COMMITTED' as the very last line.",
+    "model": "qwen2.5-coder:32b @ Nosana",
+    "latency_ms": 11200
+  },
+  {
+    "type": "forward",
+    "epoch": 2,
+    "prompt": "You are a senior data engineer writing a defensive, stdlib-only ETL script (json, re only; no network).\nLoad the payload from ./payload.json and emit a verified, normalized graph.\nRequirements:\n1. Currency normalizer `parse_money(raw)`:\n   - None / empty -> (0.0, None)\n   - Strip '$', '€', ',', whitespace; detect currency from symbol or suffix ('USD' -> USD, '€' or 'EUR' -> EUR).\n   - Apply magnitude suffixes: 'K' x1e3, 'M' x1e6, 'B' x1e9 (case-insensitive).\n   - Return (float amount, currency code). Never call float() on the raw string.\n2. Weight parser `parse_weight(w)`: accept float/int; for strings strip any non-numeric prefix such as 'CRITICAL_' via regex r'[-+]?\\d*\\.?\\d+' before float().\n3. NEVER interpolate values into Cypher with f-strings. Use parameterized queries:\n   \"MERGE (n:Entity {id: $id}) SET n += $props\" with a params dict. Preserve names byte-exact (apostrophes such as \"NVIDIA Corp's Core\" must survive).\n4. Validate: every edge endpoint exists, 0 <= weight <= 1, exposure >= 0. Raise AssertionError otherwise.\n5. Print exactly one line 'CLEANED_GRAPH_JSON: ' + json.dumps({\"nodes\":[{id,name,tier,exposure,currency,status}], \"edges\":[{src,dst,rel,weight}]}).\n6. Print 'ASSERTION_PASSED_GRAPH_COMMITTED' as the very last line.",
+    "code": "import json\nimport re\n\nwith open(\"payload.json\") as f:\n    data = json.load(f)\n\nMULT = {\"K\": 1e3, \"M\": 1e6, \"B\": 1e9}\n\n\ndef parse_money(raw):\n    if raw is None or str(raw).strip() == \"\":\n        return 0.0, None\n    s = str(raw).strip()\n    cur = None\n    if \"$\" in s or \"USD\" in s.upper():\n        cur = \"USD\"\n    if \"\\u20ac\" in s or \"EUR\" in s.upper():\n        cur = \"EUR\"\n    m = re.search(r\"([-+]?\\d[\\d,]*\\.?\\d*)\\s*([KMB])?\", s.replace(\"USD\", \"\").replace(\"EUR\", \"\"), re.I)\n    if not m:\n        raise ValueError(\"Unparseable exposure: %r\" % raw)\n    amount = float(m.group(1).replace(\",\", \"\"))\n    if m.group(2):\n        amount *= MULT[m.group(2).upper()]\n    return amount, cur\n\n\ndef parse_weight(w):\n    if isinstance(w, (int, float)):\n        return float(w)\n    m = re.search(r\"[-+]?\\d*\\.?\\d+\", str(w))\n    if not m:\n        raise ValueError(\"Unparseable weight: %r\" % w)\n    return float(m.group(0))\n\n\nqueries = []\nnodes = []\nfor node in data[\"nodes\"]:\n    amount, cur = parse_money(node.get(\"exposure_raw\"))\n    props = {\"name\": node[\"name\"], \"tier\": node[\"tier\"], \"exposure\": amount,\n             \"currency\": cur, \"status\": node[\"status\"]}\n    queries.append((\"MERGE (n:Entity {id: $id}) SET n += $props\", {\"id\": node[\"id\"], \"props\": props}))\n    nodes.append(dict(id=node[\"id\"], **props))\n\nids = {n[\"id\"] for n in nodes}\nedges = []\nfor edge in data[\"edges\"]:\n    w = parse_weight(edge[\"weight\"])\n    assert edge[\"src\"] in ids and edge[\"dst\"] in ids, \"dangling edge\"\n    assert 0.0 <= w <= 1.0, \"weight out of range\"\n    queries.append((\"MATCH (a:Entity {id: $src}), (b:Entity {id: $dst}) MERGE (a)-[r:SUPPLIES {rel: $rel}]->(b) SET r.weight = $w\",\n                    {\"src\": edge[\"src\"], \"dst\": edge[\"dst\"], \"rel\": edge[\"rel\"], \"w\": w}))\n    edges.append({\"src\": edge[\"src\"], \"dst\": edge[\"dst\"], \"rel\": edge[\"rel\"], \"weight\": w})\n\nassert all(n[\"exposure\"] >= 0 for n in nodes)\nprint(\"Prepared %d parameterized Cypher statements\" % len(queries))\nprint(\"CLEANED_GRAPH_JSON: \" + json.dumps({\"nodes\": nodes, \"edges\": edges}, ensure_ascii=False))\nprint(\"ASSERTION_PASSED_GRAPH_COMMITTED\")\n",
+    "model": "qwen2.5-coder:7b @ Nosana",
+    "latency_ms": 9700
+  },
+  {
+    "type": "sandbox",
+    "epoch": 2,
+    "result": {
+      "passed": true,
+      "reward": 1.0,
+      "exit_code": 0,
+      "output": "Prepared 11 parameterized Cypher statements\nCLEANED_GRAPH_JSON: {\"nodes\": [{\"id\": \"HOLDING:NVDA\", \"name\": \"NVIDIA Corp's Core\", \"tier\": \"Portfolio_Holding\", \"exposure\": 12500000.0, \"currency\": \"USD\", \"status\": \"ACTIVE\"}, {\"id\": \"HOLDING:AAPL\", \"name\": \"Apple Inc.\", \"tier\": \"Portfolio_Holding\", \"exposure\": 9800000.0, \"currency\": \"USD\", \"status\": \"ACTIVE\"}, {\"id\": \"SUP:TSMC\", \"name\": \"Taiwan Semi (TSMC)\", \"tier\": \"Tier1_Foundry\", \"exposure\": 8500000.0, \"currency\": \"USD\", \"status\": \"ACTIVE\"}, {\"id\": \"SUP:ASML\", \"name\": \"ASML Holding N.V.\", \"tier\": \"Tier2_Equipment\", \"exposure\": 4200000.0, \"currency\": \"EUR\", \"status\": \"ACTIVE\"}, {\"id\": \"SUP:ZEISS\", \"name\": \"Carl Zeiss SMT's Optics\", \"tier\": \"Tier3_Component\", \"exposure\": 1500000.0, \"currency\": \"EUR\", \"status\": \"WARNING\"}, {\"id\": \"RAW:QUARTZ_X\", \"name\": \"Spruce Pine High-Purity Quartz\", \"tier\": \"Tier4_RawMaterial\", \"exposure\": 0.0, \"currency\": null, \"status\": \"SANCTION_OR_FORCE_MAJEURE\"}], \"edges\": [{\"src\": \"RAW:QUARTZ_X\", \"dst\": \"SUP:ZEISS\", \"rel\": \"SUPPLIES_MATERIAL\", \"weight\": 0.98}, {\"src\": \"SUP:ZEISS\", \"dst\": \"SUP:ASML\", \"rel\": \"SUPPLIES_OPTICS\", \"weight\": 0.95}, {\"src\": \"SUP:ASML\", \"dst\": \"SUP:TSMC\", \"rel\": \"SUPPLIES_LITHOGRAPHY\", \"weight\": 0.92}, {\"src\": \"SUP:TSMC\", \"dst\": \"HOLDING:NVDA\", \"rel\": \"FABRICATES_CHIPS\", \"weight\": 1.0}, {\"src\": \"SUP:TSMC\", \"dst\": \"HOLDING:AAPL\", \"rel\": \"FABRICATES_CHIPS\", \"weight\": 0.88}]}\nASSERTION_PASSED_GRAPH_COMMITTED",
+      "latency_ms": 377,
+      "engine": "Daytona Sandbox (95fe7c59)",
+      "sandbox_id": "95fe7c59-mock",
+      "checks": [
+        {
+          "name": "exit_code == 0",
+          "ok": true,
+          "detail": "exit_code=0"
+        },
+        {
+          "name": "marker ASSERTION_PASSED_GRAPH_COMMITTED",
+          "ok": true,
+          "detail": "marker found on last line"
+        },
+        {
+          "name": "CLEANED_GRAPH_JSON parses",
+          "ok": true,
+          "detail": "6 nodes, 5 edges"
+        },
+        {
+          "name": "node exposures match ground truth",
+          "ok": true,
+          "detail": "6/6 within 1%"
+        },
+        {
+          "name": "currencies normalized",
+          "ok": true,
+          "detail": "USD x3, EUR x2, null x1"
+        },
+        {
+          "name": "names byte-exact (apostrophes)",
+          "ok": true,
+          "detail": "2 apostrophe names preserved"
+        },
+        {
+          "name": "edge weights match ground truth",
+          "ok": true,
+          "detail": "5/5 within 0.005"
+        },
+        {
+          "name": "all edges present",
+          "ok": true,
+          "detail": "5/5"
+        }
+      ],
+      "failures": [],
+      "cleaned": {
+        "nodes": [
+          {
+            "id": "HOLDING:NVDA",
+            "name": "NVIDIA Corp's Core",
+            "tier": "Portfolio_Holding",
+            "exposure": 12500000.0,
+            "currency": "USD",
+            "status": "ACTIVE"
+          },
+          {
+            "id": "HOLDING:AAPL",
+            "name": "Apple Inc.",
+            "tier": "Portfolio_Holding",
+            "exposure": 9800000.0,
+            "currency": "USD",
+            "status": "ACTIVE"
+          },
+          {
+            "id": "SUP:TSMC",
+            "name": "Taiwan Semi (TSMC)",
+            "tier": "Tier1_Foundry",
+            "exposure": 8500000.0,
+            "currency": "USD",
+            "status": "ACTIVE"
+          },
+          {
+            "id": "SUP:ASML",
+            "name": "ASML Holding N.V.",
+            "tier": "Tier2_Equipment",
+            "exposure": 4200000.0,
+            "currency": "EUR",
+            "status": "ACTIVE"
+          },
+          {
+            "id": "SUP:ZEISS",
+            "name": "Carl Zeiss SMT's Optics",
+            "tier": "Tier3_Component",
+            "exposure": 1500000.0,
+            "currency": "EUR",
+            "status": "WARNING"
+          },
+          {
+            "id": "RAW:QUARTZ_X",
+            "name": "Spruce Pine High-Purity Quartz",
+            "tier": "Tier4_RawMaterial",
+            "exposure": 0.0,
+            "currency": null,
+            "status": "SANCTION_OR_FORCE_MAJEURE"
+          }
+        ],
+        "edges": [
+          {
+            "src": "RAW:QUARTZ_X",
+            "dst": "SUP:ZEISS",
+            "rel": "SUPPLIES_MATERIAL",
+            "weight": 0.98
+          },
+          {
+            "src": "SUP:ZEISS",
+            "dst": "SUP:ASML",
+            "rel": "SUPPLIES_OPTICS",
+            "weight": 0.95
+          },
+          {
+            "src": "SUP:ASML",
+            "dst": "SUP:TSMC",
+            "rel": "SUPPLIES_LITHOGRAPHY",
+            "weight": 0.92
+          },
+          {
+            "src": "SUP:TSMC",
+            "dst": "HOLDING:NVDA",
+            "rel": "FABRICATES_CHIPS",
+            "weight": 1.0
+          },
+          {
+            "src": "SUP:TSMC",
+            "dst": "HOLDING:AAPL",
+            "rel": "FABRICATES_CHIPS",
+            "weight": 0.88
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "passed",
+    "epoch": 2
+  },
+  {
+    "type": "neo4j_commit",
+    "stats": {
+      "nodes": 6,
+      "rels": 5
+    },
+    "latency_ms": 910
+  },
+  {
+    "type": "contagion",
+    "paths": [
+      {
+        "path": [
+          "RAW:QUARTZ_X",
+          "SUP:ZEISS",
+          "SUP:ASML",
+          "SUP:TSMC",
+          "HOLDING:NVDA"
+        ],
+        "names": [
+          "Spruce Pine High-Purity Quartz",
+          "Carl Zeiss SMT's Optics",
+          "ASML Holding N.V.",
+          "Taiwan Semi (TSMC)",
+          "NVIDIA Corp's Core"
+        ],
+        "contagion": 0.85652,
+        "holding": "HOLDING:NVDA",
+        "exposure": 12500000.0,
+        "at_risk": 10706500.0
+      },
+      {
+        "path": [
+          "RAW:QUARTZ_X",
+          "SUP:ZEISS",
+          "SUP:ASML",
+          "SUP:TSMC",
+          "HOLDING:AAPL"
+        ],
+        "names": [
+          "Spruce Pine High-Purity Quartz",
+          "Carl Zeiss SMT's Optics",
+          "ASML Holding N.V.",
+          "Taiwan Semi (TSMC)",
+          "Apple Inc."
+        ],
+        "contagion": 0.7537376,
+        "holding": "HOLDING:AAPL",
+        "exposure": 9800000.0,
+        "at_risk": 7386628.0
+      }
+    ]
+  },
+  {
+    "type": "graph",
+    "graph": {
+      "nodes": [
+        {
+          "id": "HOLDING:NVDA",
+          "name": "NVIDIA Corp's Core",
+          "tier": "Portfolio_Holding",
+          "exposure": 12500000.0,
+          "currency": "USD",
+          "status": "ACTIVE"
+        },
+        {
+          "id": "HOLDING:AAPL",
+          "name": "Apple Inc.",
+          "tier": "Portfolio_Holding",
+          "exposure": 9800000.0,
+          "currency": "USD",
+          "status": "ACTIVE"
+        },
+        {
+          "id": "SUP:TSMC",
+          "name": "Taiwan Semi (TSMC)",
+          "tier": "Tier1_Foundry",
+          "exposure": 8500000.0,
+          "currency": "USD",
+          "status": "ACTIVE"
+        },
+        {
+          "id": "SUP:ASML",
+          "name": "ASML Holding N.V.",
+          "tier": "Tier2_Equipment",
+          "exposure": 4200000.0,
+          "currency": "EUR",
+          "status": "ACTIVE"
+        },
+        {
+          "id": "SUP:ZEISS",
+          "name": "Carl Zeiss SMT's Optics",
+          "tier": "Tier3_Component",
+          "exposure": 1500000.0,
+          "currency": "EUR",
+          "status": "WARNING"
+        },
+        {
+          "id": "RAW:QUARTZ_X",
+          "name": "Spruce Pine High-Purity Quartz",
+          "tier": "Tier4_RawMaterial",
+          "exposure": 0.0,
+          "currency": null,
+          "status": "SANCTION_OR_FORCE_MAJEURE"
+        }
+      ],
+      "edges": [
+        {
+          "src": "RAW:QUARTZ_X",
+          "dst": "SUP:ZEISS",
+          "rel": "SUPPLIES_MATERIAL",
+          "weight": 0.98
+        },
+        {
+          "src": "SUP:ZEISS",
+          "dst": "SUP:ASML",
+          "rel": "SUPPLIES_OPTICS",
+          "weight": 0.95
+        },
+        {
+          "src": "SUP:ASML",
+          "dst": "SUP:TSMC",
+          "rel": "SUPPLIES_LITHOGRAPHY",
+          "weight": 0.92
+        },
+        {
+          "src": "SUP:TSMC",
+          "dst": "HOLDING:NVDA",
+          "rel": "FABRICATES_CHIPS",
+          "weight": 1.0
+        },
+        {
+          "src": "SUP:TSMC",
+          "dst": "HOLDING:AAPL",
+          "rel": "FABRICATES_CHIPS",
+          "weight": 0.88
+        }
+      ]
+    }
+  },
+  {
+    "type": "done",
+    "success": true,
+    "epochs": 2
+  }
+]

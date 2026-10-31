@@ -1,0 +1,46 @@
+/* EvoGraph-Quant shared brand tokens, the single source for app.py, slides/ and video/.
+   Theme: Hallmark "Ink" (paper colourway): white paper, a black with no hue, hairline rules,
+   Epilogue 700 over Epilogue 400, IBM Plex Mono for code.
+   Semantics: black = structure, teal = verified / passed (the one Ink signal),
+   red = risk and failure (contagion paths, crashes, failed checks). Never deep blue / black tech. */
+@import url("https://fonts.googleapis.com/css2?family=Epilogue:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap");
+
+:root {
+  /* Ink theme tokens (same names as app.py) */
+  --color-paper: oklch(99.5% 0.003 100); --color-paper-2: oklch(97% 0.004 100); --color-paper-3: oklch(94% 0.006 100);
+  --color-ink: oklch(16% 0 0); --color-ink-2: oklch(28% 0 0); --color-muted: oklch(44% 0 0);
+  --color-rule: oklch(89% 0.004 100); --color-rule-2: oklch(93.5% 0.003 100);
+  --color-accent: oklch(50% 0.095 188); --color-accent-soft: oklch(93% 0.05 190); --color-accent-soft-ink: oklch(27% 0.045 190);
+  --color-risk: oklch(54% 0.16 32); --color-risk-soft: oklch(94% 0.035 32);
+
+  /* Short names used by video/ and slides/ (keep these names) */
+  --paper: var(--color-paper);
+  --paper-2: var(--color-paper-2);
+  --paper-3: var(--color-paper-3);
+  --ink: var(--color-ink);
+  --ink-2: var(--color-ink-2);
+  --muted: var(--color-muted);
+  --rule: var(--color-rule);
+  --accent: var(--color-risk);            /* risk signal: contagion pulse, circled dirty values */
+  --accent-soft: var(--color-risk-soft);
+  --ok: var(--color-accent);              /* Ink teal: verified, passed, reward 1.0 */
+  --ok-soft: var(--color-accent-soft);
+  --fail: oklch(48% 0.16 27);             /* crash, exit 1, failed check */
+  --fail-soft: oklch(94% 0.03 27);
+  --warn: oklch(55% 0.11 70);
+  --node-holding: var(--color-ink);       /* portfolio holdings: solid black */
+  --node-t1: oklch(32% 0 0);
+  --node-t2: oklch(44% 0 0);
+  --node-t3: oklch(56% 0 0);
+  --node-t4: var(--color-risk);           /* the sanctioned raw material: where risk starts */
+
+  --font-display: "Epilogue", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Epilogue", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --tracking-display: -0.04em;
+  --display-weight: 700;
+
+  --radius: 12px;
+  --hair: 1px;
+  --shadow-card: 0 20px 40px oklch(20% 0 0 / 0.12);
+}
