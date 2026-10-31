@@ -1,0 +1,11 @@
+# EvoGraph-Quant dependencies
+# Recreate env:  python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+daytona            # Daytona Python SDK (import: `from daytona import Daytona`) - old name was daytona-sdk
+adalflow           # AdalFlow (Parameter + TextGrad optimizer)
+neo4j>=5.15.0      # Neo4j Python driver
+openai>=1.30.0     # OpenAI-compatible client (also works with Nosana vLLM/Ollama endpoints)
+streamlit          # Demo dashboard
+streamlit-agraph   # Graph rendering in Streamlit
+python-dotenv>=1.0.0
+pydantic>=2.7.0
+eval_type_backport; python_version < "3.10"   # needed for daytona SDK on Python 3.9 (uses `X | None` hints)
