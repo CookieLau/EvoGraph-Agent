@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Outro</title>
+<link rel="stylesheet" href="../../brand/tokens.css">
+<style>
+  html, body { margin: 0; background: var(--paper); overflow-x: clip; }
+  #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden;
+           background: var(--paper); color: var(--ink); font-family: var(--font-body); }
+  .display { font-family: var(--font-display); font-weight: var(--display-weight, 700); letter-spacing: var(--tracking-display, -0.02em); }
+
+  #cam { position: absolute; inset: 0; transform-origin: 960px 480px; }
+  .col { position: absolute; top: 290px; width: 460px; margin-left: -230px; text-align: center; }
+  .tile { width: 260px; height: 260px; margin: 0 auto; border-radius: 22px; background: var(--paper-2);
+          border: var(--hair, 1px) solid var(--rule);
+          box-shadow: var(--shadow-card, 0 20px 40px color-mix(in srgb, var(--ink) 12%, transparent)); }
+  .tile { position: relative; }
+  .tile svg { width: 260px; height: 260px; display: block; }
+  /* Official sponsor logo, when assets/sponsors/<name>.(svg|png) exists; the line icon stays as fallback. */
+  .tile .logo { position: absolute; left: 50%; top: 50%; max-width: 200px; height: 72px; object-fit: contain;
+                transform: translate(-50%, -50%); display: none; }
+  .tile.has-logo .logo { display: block; }
+  .tile.has-logo svg { visibility: hidden; }
+  .ln { fill: none; stroke: var(--ink); stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; }
+  .ok { fill: none; stroke: var(--ok); stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; }
+  .ac { fill: none; stroke: var(--accent); stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; }
+  .badge { fill: var(--paper-2); stroke: var(--accent); stroke-width: 5; }
+  .nd { fill: var(--ink); }
+  .nd.hot { fill: var(--accent); }
+  .name { margin-top: 44px; font-family: var(--font-display); font-weight: var(--display-weight, 700); letter-spacing: var(--tracking-display, -0.02em); font-size: 64px; color: var(--ink); }
+  .rule { height: 3px; width: 0; margin: 14px auto 0; background: var(--ink); border-radius: 2px; }
+  .desc { margin-top: 18px; font-size: 32px; color: var(--ink-2); }
+
+  #links { position: absolute; inset: 0; pointer-events: none; }
+  .wire { fill: none; stroke: var(--muted); stroke-width: 3; stroke-linecap: round; }
+  .spark { fill: var(--ok); }
+
+  #end { position: absolute; left: 0; right: 0; top: 380px; text-align: center; transform-origin: 960px 520px; }
+  #line { font-family: var(--font-display); font-weight: var(--display-weight, 700); font-size: 74px; color: var(--ink); letter-spacing: var(--tracking-display, -0.02em); }
+  #endrule { height: 4px; width: 0; margin: 46px auto 40px; background: var(--ok); border-radius: 2px; }
+  #mark { display: inline-flex; align-items: center; gap: 22px; font-family: var(--font-display); font-weight: var(--display-weight, 700); letter-spacing: var(--tracking-display, -0.02em);
+          font-size: 54px; color: var(--ink); }
+  #mark svg { width: 64px; height: 64px; }
+  #veil { position: absolute; inset: 0; background: var(--paper); opacity: 0; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="cam">
+    <svg id="links" viewBox="0 0 1920 1080" width="1920" height="1080">
+      <path id="w1" class="wire" d="M 560 420 L 800 420"/>
+      <path id="w1h" class="wire" d="M 786 406 L 800 420 L 786 434"/>
+      <path id="w1p" d="M 560 420 L 800 420" fill="none" stroke="none"/>
+      <path id="w2" class="wire" d="M 1120 420 L 1360 420"/>
+      <path id="w2h" class="wire" d="M 1346 406 L 1360 420 L 1346 434"/>
+      <path id="w2p" d="M 1120 420 L 1360 420" fill="none" stroke="none"/>
+      <g id="sparks"></g>
+    </svg>
+
+    <div class="col" id="c1" style="left:400px">
+      <div class="tile" data-logo="nosana">
+        <img class="logo" alt="Nosana logo">
+        <svg viewBox="0 0 260 260">
+          <path class="ln" id="i1a" d="M 80 80 H 180 V 180 H 80 Z"/>
+          <path class="ok" id="i1b" d="M 106 106 H 154 V 154 H 106 Z"/>
+          <path class="ln" id="i1c" d="M 58 102 H 80 M 58 130 H 80 M 58 158 H 80 M 180 102 H 202 M 180 130 H 202 M 180 158 H 202 M 102 58 V 80 M 130 58 V 80 M 158 58 V 80 M 102 180 V 202 M 130 180 V 202 M 158 180 V 202"/>
+        </svg>
+      </div>
+      <div class="name">Nosana</div>
+      <div class="rule"></div>
+      <div class="desc">Private GPU inference</div>
+    </div>
+
+    <div class="col" id="c2" style="left:960px">
+      <div class="tile" data-logo="daytona">
+        <img class="logo" alt="Daytona logo">
+        <svg viewBox="0 0 260 260">
+          <path class="ln" id="i2a" d="M 64 92 Q 64 80 76 80 H 184 Q 196 80 196 92 V 186 Q 196 198 184 198 H 76 Q 64 198 64 186 Z"/>
+          <path class="ln" id="i2b" d="M 64 110 H 196"/>
+          <path class="ln" id="i2c" d="M 112 134 L 94 153 L 112 172 M 148 134 L 166 153 L 148 172"/>
+          <circle class="badge" id="i2d" cx="194" cy="80" r="26"/>
+          <path class="ac" id="i2e" d="M 178 96 L 210 64"/>
+        </svg>
+      </div>
+      <div class="name">Daytona</div>
+      <div class="rule"></div>
+      <div class="desc">Offline execution verifier</div>
+    </div>
+
+    <div class="col" id="c3" style="left:1520px">
+      <div class="tile" data-logo="neo4j">
+        <img class="logo" alt="Neo4j logo">
+        <svg viewBox="0 0 260 260">
+          <path class="ln" id="i3a" d="M 70 182 L 116 92 M 116 92 L 192 74 M 70 182 L 128 206 M 128 206 L 186 168"/>
+          <path class="ac" id="i3b" d="M 70 182 L 116 92 L 186 168"/>
+          <circle class="nd hot" id="n1" cx="70" cy="182" r="13"/>
+          <circle class="nd" id="n2" cx="116" cy="92" r="13"/>
+          <circle class="nd" id="n3" cx="192" cy="74" r="13"/>
+          <circle class="nd hot" id="n4" cx="186" cy="168" r="13"/>
+          <circle class="nd" id="n5" cx="128" cy="206" r="13"/>
+        </svg>
+      </div>
+      <div class="name">Neo4j</div>
+      <div class="rule"></div>
+      <div class="desc">Contagion graph and lineage</div>
+    </div>
+  </div>
+
+  <div id="end">
+    <div id="line">Only verified data reaches the risk graph.</div>
+    <div id="endrule"></div>
+    <div id="mark">
+      <svg viewBox="0 0 64 64">
+        <path class="ln" style="stroke-width:3.5" d="M 14 46 L 30 18 L 50 40"/>
+        <circle class="nd hot" cx="14" cy="46" r="6"/>
+        <circle class="nd" cx="30" cy="18" r="6"/>
+        <circle class="nd hot" cx="50" cy="40" r="6"/>
+      </svg>
+      <span>EvoGraph-Quant</span>
+    </div>
+  </div>
+  <div id="veil"></div>
+</div>
+<script src="../scene_kit.js"></script>
+<script>
+  window.SCENE = { duration: 7, still: 4.5, title: "Outro" };
+
+  // Sponsor logos: try <key>_160.png (on-light), then .svg, then .png; fall back to the line icon.
+  document.querySelectorAll(".tile[data-logo]").forEach((tile) => {
+    const img = tile.querySelector("img.logo"), key = tile.dataset.logo;
+    const tries = [`${key}_160.png`, `${key}.svg`, `${key}.png`].map((f) => `../../assets/sponsors/${f}`);  // _160.png = light-background versions
+    let k = 0;
+    img.onload = () => { if (img.naturalWidth > 0) tile.classList.add("has-logo"); };
+    img.onerror = () => { k += 1; if (k < tries.length) img.src = tries[k]; else img.remove(); };
+    img.src = tries[0];
+  });
+
+
+  const NS = "http://www.w3.org/2000/svg";
+  const sparkG = document.getElementById("sparks");
+  const SPARKS = [];
+  ["w1p", "w2p"].forEach((id, w) => {
+    for (let i = 0; i < 3; i++) {
+      const c = document.createElementNS(NS, "circle");
+      c.setAttribute("r", "7"); c.setAttribute("class", "spark");
+      sparkG.appendChild(c); SPARKS.push({ el: c, path: document.getElementById(id), w, i });
+    }
+  });
+
+  // column timing: enter start, icon draw parts
+  const COLS = [
+    { id: "c1", at: 0.15, draw: ["i1a", "i1b", "i1c"], pop: [] },
+    { id: "c2", at: 0.85, draw: ["i2a", "i2b", "i2c", "i2e"], pop: ["i2d"] },
+    { id: "c3", at: 1.55, draw: ["i3a", "i3b"], pop: ["n1", "n2", "n3", "n4", "n5"] },
+  ];
+  const WIRES = [{ id: "w1", at: 1.05 }, { id: "w2", at: 1.75 }];
+  const OUT = 4.62;   // columns leave after the key still
+
+  window.render = (t) => {
+    // gentle camera push over the first phase
+    const push = K.ep(t, 0, 4.6, "inOutCubic");
+    const outP = K.ep(t, OUT, 0.5, "inOutCubic");
+    K.css(K.$("#cam"), {
+      transform: `translateY(${K.lerp(18, 0, push) - outP * 24}px) scale(${K.lerp(0.965, 1.0, push)})`,
+      opacity: String(1 - outP),
+    });
+
+    COLS.forEach((c) => {
+      const col = document.getElementById(c.id);
+      const e = K.ep(t, c.at, 0.7, "outBack");
+      K.css(col, { opacity: String(K.ep(t, c.at, 0.45)), transform: `translateY(${(1 - e) * 40}px)` });
+      c.draw.forEach((pid, k) => K.draw(document.getElementById(pid), K.ep(t, c.at + 0.15 + k * 0.22, 0.6, "inOutCubic")));
+      c.pop.forEach((pid, k) => {
+        const p = K.ep(t, c.at + 0.35 + k * 0.08, 0.45, "outBack");
+        const el = document.getElementById(pid);
+        el.style.transformBox = "fill-box"; el.style.transformOrigin = "center";
+        el.style.transform = `scale(${Math.max(0, p)})`;
+      });
+      const logo = col.querySelector("img.logo");
+      if (logo) { const lp = K.ep(t, c.at + 0.2, 0.6, "outBack");
+        K.css(logo, { opacity: String(K.ep(t, c.at + 0.2, 0.4)), transform: `translate(-50%, -50%) scale(${K.lerp(0.82, 1, Math.max(0, lp))})` }); }
+      const name = col.querySelector(".name"), rule = col.querySelector(".rule"), desc = col.querySelector(".desc");
+      K.css(name, K.enter(t, c.at + 0.35, 0.55, 18));
+      K.css(rule, { width: K.ep(t, c.at + 0.6, 0.6) * 72 + "px" });
+      K.css(desc, K.enter(t, c.at + 0.55, 0.55, 14));
+    });
+
+    WIRES.forEach((w) => {
+      K.draw(document.getElementById(w.id), K.ep(t, w.at, 0.6, "inOutCubic"));
+      document.getElementById(w.id + "h").style.opacity = String(K.ep(t, w.at + 0.5, 0.25));
+    });
+
+    SPARKS.forEach((s) => {
+      const start = WIRES[s.w].at + 0.6;
+      const vis = K.ep(t, start, 0.3);
+      const p = (((t - start) * 0.55 + s.i / 3) % 1 + 1) % 1;
+      const pt = K.along(s.path, p);
+      s.el.setAttribute("cx", pt.x.toFixed(2)); s.el.setAttribute("cy", pt.y.toFixed(2));
+      // fade near the ends of the wire so sparks feel like they enter and leave the tiles
+      const edge = Math.min(1, p / 0.12, (1 - p) / 0.12);
+      s.el.style.opacity = String(vis * edge);
+    });
+
+    // closing line + wordmark
+    const endIn = K.ep(t, 5.0, 0.6);
+    K.css(K.$("#end"), { transform: `scale(${K.lerp(1.03, 1.0, K.ep(t, 5.0, 1.8, "outCubic"))})` });
+    K.css(K.$("#line"), K.enter(t, 5.0, 0.65, 22));
+    K.css(K.$("#endrule"), { width: K.ep(t, 5.45, 0.6, "inOutCubic") * 180 + "px" });
+    K.css(K.$("#mark"), K.enter(t, 5.6, 0.6, 16));
+    if (endIn <= 0) K.$("#end").style.opacity = "1";
+
+    // final fade into paper
+    K.css(K.$("#veil"), { opacity: String(K.ep(t, 6.5, 0.5, "inOutCubic")) });
+  };
+</script>
+</body>
+</html>

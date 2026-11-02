@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dirty data problem</title>
+<link rel="stylesheet" href="../../brand/tokens.css">
+<style>
+  html, body { margin: 0; background: var(--paper); overflow-x: clip; }
+  #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden;
+           background: var(--paper); color: var(--ink); font-family: var(--font-body); }
+  #cam { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; }
+  .mono { font-family: var(--font-mono); }
+
+  .panel { position: absolute; box-sizing: border-box; background: var(--paper);
+           border: var(--hair) solid var(--rule); border-radius: var(--radius); box-shadow: var(--shadow-card); }
+
+  /* confidential feed card */
+  #card { left: 150px; top: 190px; width: 650px; height: 680px; }
+  .card-head { display: flex; align-items: center; gap: 14px; height: 76px; padding: 0 30px;
+               border-bottom: var(--hair) solid var(--rule); box-sizing: border-box; }
+  .card-head svg { width: 30px; height: 30px; flex: none; }
+  .fname { font-family: var(--font-mono); font-size: 23px; color: var(--ink); }
+  .pill { margin-left: auto; font-size: 20px; color: var(--ink-2); background: var(--paper-3);
+          padding: 6px 14px; border-radius: 999px; }
+  .json { margin: 0; padding: 22px 30px; font-family: var(--font-mono); font-size: 25px; line-height: 38px;
+          color: var(--ink-2); white-space: pre; }
+  .json .k { color: var(--muted); }
+  .dirty { position: relative; color: var(--ink); isolation: isolate; }
+  .dirty .fill { position: absolute; left: -6px; right: -6px; top: -2px; bottom: -2px; border-radius: 8px;
+                 background: var(--accent-soft); opacity: 0; z-index: -1; }
+  .dirty svg { position: absolute; left: -10px; top: -6px; overflow: visible; pointer-events: none; }
+  .ring { fill: none; stroke: var(--accent); stroke-width: 2.5; }
+  .card-foot { position: absolute; left: 30px; bottom: 20px; font-size: 22px; color: var(--muted); }
+
+  /* external agents */
+  #ext { left: 1510px; top: 160px; width: 340px; height: 180px; display: flex; flex-direction: column;
+         align-items: center; justify-content: center; gap: 12px; }
+  #ext svg.ico { width: 70px; height: 46px; }
+  #ext .lbl { position: relative; font-size: 28px; white-space: nowrap; line-height: 1.15; text-align: center; color: var(--ink); }
+  #ext .strike { position: absolute; left: -8px; right: -8px; top: 50%; height: 3px; background: var(--fail);
+                 transform-origin: 0 50%; transform: scaleX(0); }
+
+  /* network boundary label */
+  #netlbl { position: absolute; left: 132px; top: 104px; padding: 0 12px; background: var(--paper);
+            font-size: 22px; color: var(--ink-2); }
+
+  /* internal model */
+  #model { left: 850px; top: 360px; width: 590px; height: 110px; display: flex; align-items: center;
+           gap: 22px; padding: 0 28px; }
+  #model svg { width: 62px; height: 62px; flex: none; }
+  #model .t1 { font-family: var(--font-display); font-weight: var(--display-weight);
+               letter-spacing: var(--tracking-display); font-size: 32px; color: var(--ink); }
+  #model .t2 { font-size: 21px; color: var(--muted); margin-top: 2px; }
+
+  /* code panel */
+  #code { left: 850px; top: 495px; width: 590px; height: 166px; padding: 16px 24px; }
+  .plabel { font-size: 20px; color: var(--muted); margin-bottom: 6px; }
+  .codeline { font-family: var(--font-mono); font-size: 21px; line-height: 33px; color: var(--ink); white-space: pre; height: 33px; }
+  .codeline .bad { text-decoration-line: underline; text-decoration-style: wavy; text-decoration-thickness: 2px;
+                   text-underline-offset: 6px; }
+  .caret { display: inline-block; width: 11px; height: 24px; background: var(--ink); vertical-align: -4px; margin-left: 2px; }
+
+  /* terminal */
+  #term { left: 850px; top: 684px; width: 590px; height: 190px; padding: 16px 24px; transform-origin: 50% 50%; overflow: hidden; }
+  #term .tint { position: absolute; inset: 0; background: var(--fail-soft); opacity: 0; border-radius: var(--radius); z-index: 0; }
+  #term .bar { position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: var(--fail); opacity: 0; }
+  #term .inner { position: relative; z-index: 1; }
+  .tline { font-family: var(--font-mono); font-size: 21px; line-height: 30px; color: var(--ink-2); white-space: pre; }
+  .tline.err { color: var(--fail); font-weight: 600; }
+  .tok { position: relative; }
+  #crack { position: absolute; left: 0; top: 0; width: 590px; height: 190px; overflow: visible; z-index: 2; pointer-events: none; }
+  .crack { fill: none; stroke: var(--fail); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; opacity: 0.6; }
+
+  /* overlay lines */
+  #lines, #over { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: visible; pointer-events: none; }
+  .boundary { fill: none; stroke: var(--muted); stroke-width: 2; }
+  .arrow { fill: none; stroke: var(--ink-2); stroke-width: 3; stroke-linecap: round; }
+  .arrowhead { fill: var(--ink-2); }
+  .slash { fill: none; stroke: var(--fail); stroke-width: 7; stroke-linecap: round; }
+  .dot { fill: var(--accent); }
+  .dot.blocked { fill: var(--fail); }
+  .link { fill: none; stroke: var(--fail); stroke-width: 2.5; stroke-linecap: round; }
+  .linkend { fill: var(--fail); }
+
+  .caption { position: absolute; left: 120px; bottom: 96px; font-size: 40px; line-height: 1.25;
+             color: var(--ink-2); max-width: 1500px; opacity: 0; }
+
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="cam">
+    <svg id="lines" viewBox="0 0 1920 1080">
+      <path id="boundary" class="boundary" pathLength="100"
+            d="M 118 120 H 1442 Q 1460 120 1460 138 V 882 Q 1460 900 1442 900 H 118 Q 100 900 100 882 V 138 Q 100 120 118 120 Z"/>
+      <path id="arrow" class="arrow" d="M 808 246 C 1000 150, 1300 160, 1492 236"/>
+      <polygon id="arrowhead" class="arrowhead" points="0,-11 22,0 0,11"/>
+      <circle class="dot" id="dot0" r="8"/>
+      <circle class="dot" id="dot1" r="8"/>
+      <circle class="dot" id="dot2" r="8"/>
+      <path id="slash" class="slash" pathLength="100"/>
+    </svg>
+
+    <div id="netlbl">Your private network</div>
+
+    <div class="panel" id="card">
+      <div class="card-head">
+        <svg viewBox="0 0 30 30" aria-hidden="true" style="fill:none;stroke:var(--ink-2);stroke-width:2;stroke-linecap:round">
+          <rect x="5" y="13" width="20" height="14" rx="3"/>
+          <path d="M 9 13 V 9 a 6 6 0 0 1 12 0 V 13"/>
+          <path d="M 15 18.5 V 21.5"/>
+        </svg>
+        <span class="fname">portfolio_feed.json</span>
+        <span class="pill">confidential</span>
+      </div>
+<pre class="json">{ <span class="k">"id"</span>: "HOLDING:NVDA",
+  <span class="k">"name"</span>: <span class="dirty" data-i="6">"NVIDIA Corp's Core"</span>,
+  <span class="k">"exposure_raw"</span>: <span class="dirty" data-i="0">"$12,500,000"</span> },
+{ <span class="k">"id"</span>: "SUP:TSMC",
+  <span class="k">"exposure_raw"</span>: <span class="dirty" data-i="1">"8500000 USD"</span> },
+{ <span class="k">"id"</span>: "SUP:ASML",
+  <span class="k">"exposure_raw"</span>: <span class="dirty" data-i="2">"€4.2M"</span> },
+{ <span class="k">"id"</span>: "SUP:ZEISS",
+  <span class="k">"exposure_raw"</span>: <span class="dirty" data-i="3" id="z15">"1.5M EUR"</span> },
+{ <span class="k">"id"</span>: "RAW:QUARTZ_X",
+  <span class="k">"exposure_raw"</span>: <span class="dirty" data-i="4">null</span> },
+{ <span class="k">"src"</span>: "RAW:QUARTZ_X",
+  <span class="k">"weight"</span>: <span class="dirty" data-i="5">"CRITICAL_0.98"</span> }</pre>
+      <div class="card-foot" id="foot">7 dirty values in one feed</div>
+    </div>
+
+    <div class="panel" id="ext">
+      <svg class="ico" viewBox="0 0 70 46" aria-hidden="true" style="fill:none;stroke:var(--ink-2);stroke-width:2.2;stroke-linejoin:round">
+        <path d="M 18 40 H 54 a 12 12 0 0 0 1 -24 a 17 17 0 0 0 -32 -3 a 13 13 0 0 0 -5 27 Z"/>
+      </svg>
+      <div class="lbl">External AI agents<span class="strike" id="strike"></span></div>
+    </div>
+
+    <div class="panel" id="model">
+      <svg viewBox="0 0 62 62" aria-hidden="true" style="fill:none;stroke:var(--ink-2);stroke-width:2.2;stroke-linecap:round">
+        <rect x="14" y="14" width="34" height="34" rx="5"/>
+        <rect x="23" y="23" width="16" height="16" rx="2"/>
+        <path d="M 22 6 V 14 M 31 6 V 14 M 40 6 V 14 M 22 48 V 56 M 31 48 V 56 M 40 48 V 56 M 6 22 H 14 M 6 31 H 14 M 6 40 H 14 M 48 22 H 56 M 48 31 H 56 M 48 40 H 56"/>
+      </svg>
+      <div>
+        <div class="t1">Internal model</div>
+        <div class="t2">writes the ETL script</div>
+      </div>
+    </div>
+
+    <div class="panel" id="code">
+      <div class="plabel">etl.py</div>
+      <div class="codeline" id="l1"></div>
+      <div class="codeline" id="l2"></div>
+      <div class="codeline" id="l3"><span id="l3a"></span><span class="bad" id="l3b"></span></div>
+    </div>
+
+    <div class="panel" id="term">
+      <div class="tint" id="tint"></div>
+      <div class="bar" id="tbar"></div>
+      <div class="inner">
+        <div class="plabel">production run, no sandbox</div>
+        <div class="tline" id="tr1">Traceback (most recent call last):</div>
+        <div class="tline" id="tr2">  File "etl.py", line 3, in &lt;module&gt;</div>
+        <div class="tline err" id="er1">ValueError: could not convert</div>
+        <div class="tline err" id="er2">string to float: <span class="tok" id="tok">'1.5M'</span></div>
+      </div>
+      <svg id="crack" viewBox="0 0 590 190">
+        <path class="crack" id="crack1" pathLength="100" d="M 560 0 L 528 34 L 548 62 L 506 98 L 522 132 L 494 168"/>
+        <path class="crack" id="crack2" pathLength="100" d="M 548 62 L 586 84"/>
+        <path class="crack" id="crack3" pathLength="100" d="M 506 98 L 470 106"/>
+      </svg>
+    </div>
+    <svg id="over" viewBox="0 0 1920 1080">
+      <path id="link" class="link" pathLength="100"/>
+      <circle id="linkend" class="linkend" r="6"/>
+    </svg>
+  </div>
+
+  <div class="caption" id="cap0">Real portfolio feeds are messy.</div>
+  <div class="caption" id="cap1">Confidential data cannot leave the building.</div>
+  <div class="caption" id="cap2">Private models write fragile ETL. It breaks on dirty data.</div>
+</div>
+<script src="../scene_kit.js"></script>
+<script>
+  window.SCENE = { duration: 9, still: 7.5, title: "The problem: dirty confidential data" };
+
+  const L1 = 'data = json.load(open("feed.json"))';
+  const L2 = 'for node in data["nodes"]:';
+  const L3A = '    exposure = ';
+  const L3B = 'float(node["exposure_raw"])';
+  const SVGNS = "http://www.w3.org/2000/svg";
+  const C = { ok: false };
+
+  // decorate dirty spans with a fill and a ring
+  K.$$(".dirty").forEach((sp) => {
+    const fill = document.createElement("span"); fill.className = "fill"; sp.prepend(fill);
+    const svg = document.createElementNS(SVGNS, "svg");
+    const rect = document.createElementNS(SVGNS, "rect");
+    rect.setAttribute("class", "ring"); rect.setAttribute("pathLength", "100"); rect.setAttribute("rx", "11");
+    svg.appendChild(rect); sp.appendChild(svg);
+  });
+
+  const setDraw = (el, p) => { if (!el) return; el.style.strokeDasharray = "100 100"; el.style.strokeDashoffset = String(100 * (1 - K.clamp(p))); };
+
+  function measure() {
+    const movers = [K.$("#cam"), ...K.$$(".panel")];
+    const saved = movers.map((m) => m.style.transform);
+    movers.forEach((m) => (m.style.transform = "none"));
+    const st = K.$("#stage").getBoundingClientRect();
+    const sc = st.width / 1920;
+    const rel = (el) => { const r = el.getBoundingClientRect();
+      return { x: (r.left - st.left) / sc, y: (r.top - st.top) / sc, w: r.width / sc, h: r.height / sc }; };
+
+    K.$$(".dirty").forEach((sp) => {
+      const r = rel(sp); const svg = sp.querySelector("svg"); const rect = svg.querySelector("rect");
+      svg.setAttribute("width", r.w + 20); svg.setAttribute("height", r.h + 12);
+      rect.setAttribute("x", 1.5); rect.setAttribute("y", 1.5);
+      rect.setAttribute("width", r.w + 17); rect.setAttribute("height", r.h + 9);
+    });
+
+    // arrow: end point, tangent, and where it crosses the network wall at x = 1460
+    const arrow = K.$("#arrow"); const L = arrow.getTotalLength();
+    const end = arrow.getPointAtLength(L), pre = arrow.getPointAtLength(L - 6);
+    C.headAng = Math.atan2(end.y - pre.y, end.x - pre.x) * 180 / Math.PI; C.end = end;
+    let pw = 0.75;
+    for (let i = 0; i <= 400; i++) { const p = i / 400; if (arrow.getPointAtLength(L * p).x >= 1460) { pw = p; break; } }
+    C.pWall = pw; C.wall = arrow.getPointAtLength(L * pw);
+    const w = C.wall;
+    K.$("#slash").setAttribute("d", `M ${w.x - 26} ${w.y + 34} L ${w.x + 26} ${w.y - 34}`);
+
+    // link from the crash token back to the dirty value it choked on
+    const tok = rel(K.$("#tok")), z = rel(K.$("#z15"));
+    const sx = 850, sy = tok.y + tok.h / 2, ex = z.x + z.w + 18, ey = z.y + z.h / 2;
+    K.$("#link").setAttribute("d", `M ${sx} ${sy} C ${sx - 110} ${sy}, ${ex + 150} ${ey}, ${ex} ${ey}`);
+    K.$("#linkend").setAttribute("cx", ex); K.$("#linkend").setAttribute("cy", ey);
+
+    movers.forEach((m, i) => (m.style.transform = saved[i]));
+    C.ok = true;
+  }
+  if (document.fonts) document.fonts.ready.then(() => { C.ok = false; });
+
+  const panelIn = (el, t, start, dur = 0.55, dy = 26, dx = 0) => {
+    const p = K.ep(t, start, dur);
+    K.css(el, { opacity: String(p), transform: `translate(${(1 - p) * dx}px, ${(1 - p) * dy}px)` });
+  };
+  const capIn = (el, t, start, outAt) => {
+    let p = K.ep(t, start, 0.5);
+    if (outAt != null) p *= 1 - K.ep(t, outAt, 0.35, "inOutCubic");
+    K.css(el, { opacity: String(p), transform: `translateY(${(1 - K.ep(t, start, 0.5)) * 16}px)` });
+  };
+
+  window.render = (t) => {
+    if (!C.ok) measure();
+
+    // camera: start tight on the feed, pull back to the room, then a slow push
+    const pull = K.ep(t, 2.5, 1.2, "inOutCubic");
+    let s = K.lerp(1.15, 1, pull), fx = K.lerp(475, 960, pull), fy = K.lerp(560, 540, pull);
+    const push = K.ep(t, 3.7, 5.3, "inOutCubic");
+    s *= K.lerp(1, 1.03, push); fx = K.lerp(fx, 1000, push); fy = K.lerp(fy, 560, push);
+    K.$("#cam").style.transform = `translate(${960 - s * fx}px, ${540 - s * fy}px) scale(${s})`;
+
+    // 0-3s: the feed and its dirty values
+    panelIn(K.$("#card"), t, 0.05, 0.6, 30);
+    K.$$(".dirty").forEach((sp) => {
+      const i = Number(sp.dataset.i); const st = 0.7 + i * 0.27;
+      sp.querySelector(".fill").style.opacity = String(K.ep(t, st, 0.25));
+      setDraw(sp.querySelector(".ring"), K.ep(t, st, 0.4, "inOutCubic"));
+    });
+    K.css(K.$("#foot"), K.enter(t, 2.55, 0.45, 10));
+    capIn(K.$("#cap0"), t, 0.4, 2.6);
+
+    // 3-5s: the wall; external agents are off limits
+    setDraw(K.$("#boundary"), K.ep(t, 2.9, 0.9, "inOutCubic"));
+    K.$("#boundary").style.opacity = String(K.ep(t, 2.9, 0.2));
+    K.css(K.$("#netlbl"), K.enter(t, 3.3, 0.45, 10));
+    panelIn(K.$("#ext"), t, 3.2, 0.55, 0, 40);
+    const arrow = K.$("#arrow");
+    K.draw(arrow, K.ep(t, 3.35, 0.55, "inOutCubic"));
+    const ah = K.$("#arrowhead");
+    ah.setAttribute("transform", `translate(${C.end.x} ${C.end.y}) rotate(${C.headAng})`);
+    ah.style.opacity = String(K.ep(t, 3.85, 0.15));
+    const dim = K.ep(t, 4.2, 0.4);
+    arrow.style.opacity = String(1 - 0.55 * dim); ah.style.opacity = String(K.ep(t, 3.85, 0.15) * (1 - 0.55 * dim));
+    setDraw(K.$("#slash"), K.ep(t, 4.05, 0.3, "outCubic"));
+    K.$("#slash").style.opacity = String(K.ep(t, 4.05, 0.05));
+    K.$("#ext").style.opacity = String(K.ep(t, 3.2, 0.55) * (1 - 0.5 * dim));
+    K.$("#strike").style.transform = `scaleX(${K.ep(t, 4.3, 0.3, "outCubic")})`;
+    const L = arrow.getTotalLength();
+    [3.95, 4.15, 4.35].forEach((st, i) => {
+      const dot = K.$("#dot" + i);
+      const p = K.ep(t, st, 0.5, "inOutCubic");
+      const pt = arrow.getPointAtLength(L * C.pWall * p);
+      const arrived = t >= st + 0.5;
+      const fade = arrived ? 1 - K.ep(t, st + 0.5, 0.25) : 1;
+      dot.setAttribute("cx", pt.x); dot.setAttribute("cy", pt.y);
+      dot.setAttribute("r", String(8 * (arrived ? K.lerp(1, 1.6, K.ep(t, st + 0.5, 0.25)) : 1)));
+      dot.classList.toggle("blocked", arrived);
+      dot.style.opacity = String((t >= st ? 1 : 0) * fade);
+    });
+    capIn(K.$("#cap1"), t, 3.0, 4.9);
+
+    // 5-9s: the internal model writes fragile ETL and it crashes
+    panelIn(K.$("#model"), t, 4.9, 0.5, 24);
+    panelIn(K.$("#code"), t, 5.15, 0.5, 24);
+    const l1 = K.type(L1, t, 5.35, 120), l2 = K.type(L2, t, 5.7, 120), l3 = K.type(L3A + L3B, t, 5.95, 130);
+    const typing = (txt, full, start) => t >= start && txt.length < full.length;
+    const caret = '<span class="caret"></span>';
+    const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+    K.$("#l1").innerHTML = esc(l1) + (typing(l1, L1, 5.35) ? caret : "");
+    K.$("#l2").innerHTML = esc(l2) + (typing(l2, L2, 5.7) ? caret : "");
+    K.$("#l3a").textContent = l3.slice(0, L3A.length);
+    K.$("#l3b").innerHTML = esc(l3.slice(L3A.length)) + (typing(l3, L3A + L3B, 5.95) ? caret : "");
+    const bad = K.ep(t, 6.6, 0.3);
+    K.$("#l3b").style.textDecorationColor = `color-mix(in srgb, var(--fail) ${Math.round(bad * 100)}%, transparent)`;
+    K.$("#l3b").style.color = bad > 0 ? `color-mix(in srgb, var(--fail) ${Math.round(bad * 100)}%, var(--ink))` : "";
+
+    // terminal pops, shakes, cracks
+    const pop = K.ep(t, 6.3, 0.4, "outBack");
+    const shakeP = K.prog(t, 6.65, 0.45);
+    const dx = shakeP > 0 && shakeP < 1 ? 11 * Math.sin(2 * Math.PI * 6 * shakeP) * (1 - shakeP) : 0;
+    K.css(K.$("#term"), { opacity: String(K.ep(t, 6.3, 0.25)), transform: `translateX(${dx}px) scale(${K.lerp(0.9, 1, pop)})` });
+    K.$("#tr1").style.opacity = String(K.ep(t, 6.45, 0.2));
+    K.$("#tr2").style.opacity = String(K.ep(t, 6.55, 0.2));
+    K.css(K.$("#er1"), K.enter(t, 6.65, 0.25, 8));
+    K.css(K.$("#er2"), K.enter(t, 6.75, 0.25, 8));
+    K.$("#tint").style.opacity = String(0.7 * K.ep(t, 6.65, 0.35));
+    K.$("#tbar").style.opacity = String(K.ep(t, 6.65, 0.2));
+    setDraw(K.$("#crack1"), K.ep(t, 6.7, 0.35, "outCubic"));
+    setDraw(K.$("#crack2"), K.ep(t, 6.85, 0.25, "outCubic"));
+    setDraw(K.$("#crack3"), K.ep(t, 6.92, 0.25, "outCubic"));
+    K.$$(".crack").forEach((c) => (c.style.opacity = t >= 6.7 ? "0.6" : "0"));
+
+    // trace the crash back to the value that caused it
+    setDraw(K.$("#link"), K.ep(t, 6.95, 0.45, "inOutCubic"));
+    K.$("#link").style.opacity = t >= 6.95 ? "1" : "0";
+    K.$("#linkend").style.opacity = String(K.ep(t, 7.3, 0.15));
+    const z = K.$("#z15");
+    const zr = z.querySelector(".ring");
+    zr.style.strokeWidth = String(K.lerp(2.5, 4, K.ep(t, 7.2, 0.25)));
+    zr.style.stroke = t >= 7.2 ? "var(--fail)" : "";
+
+    capIn(K.$("#cap2"), t, 5.2, null);
+  };
+</script>
+</body>
+</html>

@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hidden contagion</title>
+<link rel="stylesheet" href="../../brand/tokens.css">
+<style>
+  html, body { margin: 0; background: var(--paper); overflow-x: clip; }
+  #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden;
+           background: var(--paper); color: var(--ink); font-family: var(--font-body); }
+  #grain { position: absolute; inset: 0;
+           background-image: radial-gradient(circle, var(--rule) 1.2px, transparent 1.6px);
+           background-size: 32px 32px; opacity: 0.55; }
+  #world { position: absolute; inset: 0; transform-origin: 960px 520px; }
+  svg#wires { position: absolute; inset: 0; overflow: visible; }
+  .base { fill: none; stroke: var(--rule); stroke-width: 3; stroke-linecap: round; }
+  .hot  { fill: none; stroke: var(--accent); stroke-width: 4.5; stroke-linecap: round; }
+  .ring { fill: none; stroke: var(--accent); stroke-width: 3; }
+  .head-halo { fill: var(--accent-soft); }
+  .head { fill: var(--accent); }
+  .spark { fill: var(--accent); }
+
+  .card { position: absolute; width: 250px; height: 150px; box-sizing: border-box;
+          background: var(--paper); border: var(--hair) solid var(--rule); border-radius: var(--radius);
+          box-shadow: var(--shadow-card); padding: 28px 22px 18px; transform-origin: 50% 50%; }
+  .card .bar { position: absolute; left: 20px; top: 0; width: 56px; height: 6px; border-radius: 0 0 3px 3px; }
+  .card .hit { position: absolute; inset: 0; border-radius: var(--radius); background: var(--accent-soft); opacity: 0; }
+  .card .edge { position: absolute; inset: -2px; border-radius: calc(var(--radius) + 2px);
+                border: 2.5px solid var(--accent); opacity: 0; }
+  .card .name { position: relative; font-family: var(--font-display); font-weight: var(--display-weight);
+                letter-spacing: var(--tracking-display); font-size: 25px; line-height: 1.12; color: var(--ink); }
+  .card .tier { position: relative; margin-top: 10px; font-size: 18px; color: var(--muted); }
+  .card .status { position: relative; margin-top: 4px; font-size: 17px; color: var(--fail); }
+
+  .pill { position: absolute; transform: translate(-50%, -50%); font-family: var(--font-mono); font-size: 21px;
+          padding: 4px 10px; border-radius: 999px; background: var(--paper); border: var(--hair) solid var(--rule);
+          color: var(--ink-2); }
+
+  .risk { position: absolute; left: 1560px; }
+  .risk .amt { font-family: var(--font-mono); font-weight: 600; font-size: 36px; color: var(--accent); }
+  .risk .lbl { font-size: 21px; color: var(--ink-2); margin-top: 2px; }
+
+  #total { position: absolute; right: 110px; top: 70px; text-align: right; }
+  #total .big { font-family: var(--font-display); font-weight: var(--display-weight); letter-spacing: var(--tracking-display);
+                font-size: 112px; line-height: 1; color: var(--accent); }
+  #total .lbl { font-size: 28px; color: var(--ink-2); margin-top: 8px; }
+
+  .caption { position: absolute; left: 120px; bottom: 96px; font-size: 40px; color: var(--ink-2); max-width: 1300px;
+             font-family: var(--font-body); }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="grain"></div>
+  <div id="world">
+    <svg id="wires" width="1920" height="1080" viewBox="0 0 1920 1080">
+      <g id="rings">
+        <circle class="ring" id="r0" cx="215" cy="510" r="0"/>
+        <circle class="ring" id="r1" cx="215" cy="510" r="0"/>
+        <circle class="ring" id="r2" cx="215" cy="510" r="0"/>
+      </g>
+      <path class="base" id="b1" d="M350 510 L450 510"/>
+      <path class="base" id="b2" d="M700 510 L800 510"/>
+      <path class="base" id="b3" d="M1050 510 L1150 510"/>
+      <path class="base" id="b4" d="M1400 510 C1480 510 1480 330 1560 330"/>
+      <path class="base" id="b5" d="M1400 510 C1480 510 1480 690 1560 690"/>
+      <path class="hot" id="h1" d="M350 510 L450 510"/>
+      <path class="hot" id="h2" d="M700 510 L800 510"/>
+      <path class="hot" id="h3" d="M1050 510 L1150 510"/>
+      <path class="hot" id="h4" d="M1400 510 C1480 510 1480 330 1560 330"/>
+      <path class="hot" id="h5" d="M1400 510 C1480 510 1480 690 1560 690"/>
+      <g id="sparks"></g>
+      <g id="heads"></g>
+    </svg>
+
+    <div class="card" id="n0" style="left:80px; top:435px; width:270px; padding:26px 20px 16px">
+      <div class="hit"></div><div class="edge"></div>
+      <div class="bar" style="background: var(--node-t4)"></div>
+      <div class="name" style="font-size:22px">Spruce Pine<br>High-Purity Quartz</div>
+      <div class="status" style="font-size:16px; margin-top:8px">Sanction / force majeure</div>
+    </div>
+    <div class="card" id="n1" style="left:450px; top:435px">
+      <div class="hit"></div><div class="edge"></div>
+      <div class="bar" style="background: var(--node-t3)"></div>
+      <div class="name">Carl Zeiss SMT</div>
+      <div class="tier">Tier 3 optics</div>
+    </div>
+    <div class="card" id="n2" style="left:800px; top:435px">
+      <div class="hit"></div><div class="edge"></div>
+      <div class="bar" style="background: var(--node-t2)"></div>
+      <div class="name">ASML</div>
+      <div class="tier">Tier 2 lithography</div>
+    </div>
+    <div class="card" id="n3" style="left:1150px; top:435px">
+      <div class="hit"></div><div class="edge"></div>
+      <div class="bar" style="background: var(--node-t1)"></div>
+      <div class="name">TSMC</div>
+      <div class="tier">Tier 1 foundry</div>
+    </div>
+    <div class="card" id="n4" style="left:1560px; top:255px">
+      <div class="hit"></div><div class="edge"></div>
+      <div class="bar" style="background: var(--node-holding)"></div>
+      <div class="name">NVIDIA</div>
+      <div class="tier">Portfolio holding</div>
+    </div>
+    <div class="card" id="n5" style="left:1560px; top:615px">
+      <div class="hit"></div><div class="edge"></div>
+      <div class="bar" style="background: var(--node-holding)"></div>
+      <div class="name">Apple</div>
+      <div class="tier">Portfolio holding</div>
+    </div>
+
+    <div class="pill" id="w1" style="left:400px; top:470px">0.98</div>
+    <div class="pill" id="w2" style="left:750px; top:470px">0.95</div>
+    <div class="pill" id="w3" style="left:1100px; top:470px">0.92</div>
+    <div class="pill" id="w4" style="left:1436px; top:368px">1.0</div>
+    <div class="pill" id="w5" style="left:1436px; top:652px">0.88</div>
+
+    <div class="risk" id="k4" style="top:420px"><div class="amt" id="k4a">$0</div><div class="lbl">at risk</div></div>
+    <div class="risk" id="k5" style="top:780px"><div class="amt" id="k5a">$0</div><div class="lbl">at risk</div></div>
+
+    <div id="total"><div class="big" id="tot">$0.0M</div><div class="lbl">exposure at risk</div></div>
+  </div>
+
+  <div class="caption" id="c1">One sanctioned quarry, four hops away.</div>
+  <div class="caption" id="c2">Without a clean graph, this risk is invisible.</div>
+</div>
+<script src="../scene_kit.js"></script>
+<script>
+  window.SCENE = { duration: 9, still: 8, title: "Hidden contagion" };
+  const NS = "http://www.w3.org/2000/svg";
+  // edge timing: [base draw start, base draw dur, pulse start, pulse dur]
+  const EDGES = [
+    { id: 1, draw: [0.70, 0.5], pulse: [2.40, 0.6] },
+    { id: 2, draw: [0.85, 0.5], pulse: [3.00, 0.6] },
+    { id: 3, draw: [1.00, 0.5], pulse: [3.60, 0.6] },
+    { id: 4, draw: [1.15, 0.6], pulse: [4.20, 0.6] },
+    { id: 5, draw: [1.25, 0.6], pulse: [4.20, 0.6] },
+  ];
+  // node entrance start and hit time
+  const NODES = [
+    { enter: 0.15, hit: 2.00 }, { enter: 0.30, hit: 3.00 }, { enter: 0.45, hit: 3.60 },
+    { enter: 0.60, hit: 4.20 }, { enter: 0.75, hit: 4.80 }, { enter: 0.85, hit: 4.80 },
+  ];
+  const SPARKS_PER_EDGE = 3;
+  const sparkG = K.$("#sparks"), headG = K.$("#heads");
+  const sparks = {}, heads = {};
+  EDGES.forEach((e) => {
+    sparks[e.id] = [];
+    for (let i = 0; i < SPARKS_PER_EDGE; i++) {
+      const c = document.createElementNS(NS, "circle"); c.setAttribute("r", "4.5"); c.setAttribute("class", "spark");
+      sparkG.appendChild(c); sparks[e.id].push(c);
+    }
+    const halo = document.createElementNS(NS, "circle"); halo.setAttribute("r", "17"); halo.setAttribute("class", "head-halo");
+    const dot = document.createElementNS(NS, "circle"); dot.setAttribute("r", "8"); dot.setAttribute("class", "head");
+    headG.appendChild(halo); headG.appendChild(dot); heads[e.id] = [halo, dot];
+  });
+
+  window.render = (t) => {
+    // slow camera push
+    const cam = K.ep(t, 0, 9, "inOutCubic");
+    K.css(K.$("#world"), { transform: `translate(${-cam * 14}px, ${-cam * 6}px) scale(${1 + 0.04 * cam})` });
+
+    // nodes: staggered entrance, hit bounce, accent tint
+    NODES.forEach((n, i) => {
+      const el = K.$("#n" + i);
+      const pe = K.prog(t, n.enter, 0.65);
+      const s = K.lerp(0.92, 1, K.ease.outBack(pe));
+      const hp = K.prog(t, n.hit, 0.45);
+      const bump = hp > 0 && hp < 1 ? Math.sin(Math.PI * hp) * 0.05 : 0;
+      el.style.opacity = String(K.ease.outCubic(pe));
+      el.style.transform = `translateY(${(1 - K.ease.outCubic(pe)) * 30}px) scale(${s + bump})`;
+      const heat = K.ep(t, n.hit, 0.5);
+      el.querySelector(".hit").style.opacity = String(heat * 0.38);
+      el.querySelector(".edge").style.opacity = String(heat);
+    });
+
+    // edges: base draw, weight pills, hot pulse, head, flowing sparks
+    EDGES.forEach((e) => {
+      const base = K.$("#b" + e.id), hot = K.$("#h" + e.id);
+      K.draw(base, K.ep(t, e.draw[0], e.draw[1], "inOutCubic"));
+      K.css(K.$("#w" + e.id), { opacity: String(K.ep(t, e.draw[0] + e.draw[1] - 0.1, 0.4)) });
+      const pp = K.ep(t, e.pulse[0], e.pulse[1], "inOutCubic");
+      K.draw(hot, pp);
+      hot.style.opacity = pp > 0 ? "1" : "0";
+      const [halo, dot] = heads[e.id];
+      const headOn = t > e.pulse[0] && t < e.pulse[0] + e.pulse[1] + 0.15;
+      const hpt = K.along(hot, pp);
+      [halo, dot].forEach((c) => { c.setAttribute("cx", hpt.x); c.setAttribute("cy", hpt.y); });
+      const fadeHead = 1 - K.prog(t, e.pulse[0] + e.pulse[1], 0.15);
+      halo.style.opacity = headOn ? String(0.9 * fadeHead) : "0";
+      dot.style.opacity = headOn ? String(fadeHead) : "0";
+      const live = K.ep(t, e.pulse[0] + e.pulse[1], 0.35);
+      sparks[e.id].forEach((c, i) => {
+        const ph = (((t - e.pulse[0] - e.pulse[1]) * 0.8 + i / SPARKS_PER_EDGE) % 1 + 1) % 1;
+        const p = K.along(hot, ph);
+        c.setAttribute("cx", p.x); c.setAttribute("cy", p.y);
+        c.style.opacity = String(live * Math.sin(Math.PI * ph) * 0.95);
+      });
+    });
+
+    // shockwave from the sanctioned quarry
+    [0, 1, 2].forEach((i) => {
+      const p = K.prog(t, 2.0 + i * 0.25, 1.1);
+      const r = K.ep(t, 2.0 + i * 0.25, 1.1, "outCubic") * 280;
+      const ring = K.$("#r" + i);
+      ring.setAttribute("r", String(Math.max(0.1, r)));
+      ring.style.opacity = p > 0 && p < 1 ? String((1 - p) * 0.7) : "0";
+    });
+
+    // exposure at risk: real computed values (graph_store contagion_paths)
+    K.css(K.$("#k4"), { opacity: String(K.ep(t, 5.0, 0.5)), transform: `translateY(${(1 - K.ep(t, 5.0, 0.5)) * 18}px)` });
+    K.css(K.$("#k5"), { opacity: String(K.ep(t, 5.3, 0.5)), transform: `translateY(${(1 - K.ep(t, 5.3, 0.5)) * 18}px)` });
+    K.$("#k4a").textContent = K.money(K.count(10706500, t, 5.0, 1.6));
+    K.$("#k5a").textContent = K.money(K.count(7386628, t, 5.3, 1.6));
+    const tp = K.ep(t, 5.7, 0.6, "outBack");
+    K.css(K.$("#total"), { opacity: String(K.ep(t, 5.7, 0.5)), transform: `scale(${K.lerp(0.9, 1, tp)})`, transformOrigin: "100% 0" });
+    K.$("#tot").textContent = K.moneyM(K.count(18093128.48, t, 5.7, 1.6));
+
+    // captions
+    K.css(K.$("#c1"), K.enter(t, 2.0, 0.6, 18, 5.6, 0.4));
+    K.css(K.$("#c2"), K.enter(t, 6.0, 0.6, 18));
+  };
+</script>
+</body>
+</html>

@@ -8,14 +8,7 @@ __pycache__/
 .env
 .streamlit/secrets.toml
 
-# videos are not part of the repo (only the demo flow + UI);
-# keep video/stills/ because slides/index.html uses those PNGs
-*.mp4
-*.webm
-*.mov
-*.mkv
-video/*
-!video/stills/
+# videos and slides are tracked; only dependencies are ignored
 node_modules/
 
 # generated at runtime / local-only

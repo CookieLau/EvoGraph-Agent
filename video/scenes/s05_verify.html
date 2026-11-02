@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ground-truth verifier</title>
+<link rel="stylesheet" href="../../brand/tokens.css">
+<style>
+  html, body { margin: 0; background: var(--paper); overflow-x: clip; }
+  #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden;
+           background: var(--paper); color: var(--ink); font-family: var(--font-body); }
+  .display { font-family: var(--font-display); font-weight: var(--display-weight, 700); letter-spacing: var(--tracking-display, -0.04em); }
+  .mono { font-family: var(--font-mono); }
+
+  #title { position: absolute; left: 120px; top: 92px; font-size: 60px; margin: 0; line-height: 1.1; }
+
+  /* camera layer: everything that zooms */
+  #cam { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; }
+  .rowlbl { position: absolute; font-size: 22px; color: var(--muted); }
+  .cell { position: absolute; height: 104px; }
+  .face { position: absolute; inset: 0; box-sizing: border-box; padding: 12px 14px; border-radius: var(--radius);
+          border: var(--hair) solid var(--rule); background: var(--paper-2); color: var(--muted);
+          backface-visibility: hidden; }
+  .mk { display: block; width: 22px; height: 22px; overflow: visible; }
+  .mk path { fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+  .lbl { margin-top: 6px; font-size: 16px; line-height: 20px; white-space: pre; }
+  .lbl.body { font-family: var(--font-body); font-size: 19px; }
+  .lbl.mono { font-family: var(--font-mono); }
+  .detail { margin-top: 4px; font-family: var(--font-mono); font-size: 11px; line-height: 14px; opacity: 0; white-space: pre; }
+  .detail .k { color: var(--muted); }
+  .detail .v { color: var(--ink); }
+  .detail .ok { color: var(--ok); font-weight: 500; }
+
+  /* left terminal */
+  #termwrap { position: absolute; left: 120px; top: 250px; width: 520px; }
+  #termlbl { position: relative; height: 30px; font-size: 22px; color: var(--ink-2); }
+  #termlbl span { position: absolute; left: 0; top: 0; white-space: nowrap; }
+  #term { margin-top: 8px; height: 300px; box-sizing: border-box; border-radius: var(--radius);
+          border: var(--hair) solid var(--rule); background: var(--paper-2); padding: 18px 22px;
+          box-shadow: var(--shadow-card); }
+  #termhead { font-family: var(--font-mono); font-size: 16px; color: var(--muted); padding-bottom: 12px;
+              border-bottom: var(--hair) solid var(--rule); margin-bottom: 14px; }
+  .tl { font-family: var(--font-mono); font-size: 18px; line-height: 30px; white-space: pre; color: var(--ink); min-height: 30px; }
+  .tl.dim { color: var(--muted); }
+  .tl.hit { color: var(--ok); font-weight: 500; }
+
+  /* reward ring */
+  #ring { position: absolute; left: 1590px; top: 400px; width: 240px; height: 300px; }
+  #ring svg { position: absolute; left: 0; top: 0; overflow: visible; }
+  #rnum { position: absolute; left: 0; width: 240px; top: 84px; text-align: center; font-size: 64px; line-height: 1; }
+  #rlbl { position: absolute; left: 0; width: 240px; top: 154px; text-align: center; font-size: 22px; color: var(--muted); }
+  #rstat { position: absolute; left: 0; width: 240px; top: 262px; text-align: center; font-size: 30px; font-weight: 700; }
+
+  .caption { position: absolute; left: 120px; bottom: 96px; font-size: 40px; color: var(--ink-2); max-width: 1400px; margin: 0; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="cam"></div>
+
+  <div id="termwrap">
+    <div id="termlbl"><span id="tl1">Cheating script</span><span id="tl2">Epoch 2, real run</span></div>
+    <div id="term">
+      <div id="termhead">sandbox stdout</div>
+      <div class="tl" id="t1"></div>
+      <div class="tl" id="t2"></div>
+      <div class="tl" id="t3"></div>
+      <div class="tl dim" id="t4"></div>
+    </div>
+  </div>
+
+  <div id="ring">
+    <svg width="240" height="240" viewBox="0 0 240 240">
+      <circle id="rtrack" cx="120" cy="120" r="104" fill="none" stroke="var(--rule)" stroke-width="14"/>
+      <circle id="rprog" cx="120" cy="120" r="104" fill="none" stroke="var(--ok)" stroke-width="14"
+              stroke-linecap="round" transform="rotate(-90 120 120)"/>
+    </svg>
+    <div id="rnum" class="display">0.00</div>
+    <div id="rlbl">reward</div>
+    <div id="rstat"></div>
+  </div>
+
+  <h1 id="title" class="display">Ground-truth verifier</h1>
+
+  <p class="caption" id="c1">A script that only claims success still fails.</p>
+  <p class="caption" id="c2">Epoch 2 passes all 15 checks.</p>
+  <p class="caption" id="c3">Every node and edge is checked against ground truth.</p>
+</div>
+<script src="../scene_kit.js"></script>
+<script>
+  window.SCENE = { duration: 8, still: 7, title: "Ground-truth verifier" };
+
+  // ---- layout -------------------------------------------------------------
+  const GX = 690, GW = 840, GAP = 12, ROW_Y = [250, 440, 630], CELL_H = 104;
+  const rows = [
+    { label: "protocol", cls: "body", items: ["exit code", "marker", "JSON", "no extras"] },
+    { label: "nodes", cls: "mono", items: ["NVDA", "AAPL", "TSMC", "ASML", "ZEISS", "QUARTZ"] },
+    { label: "edges", cls: "mono", items: ["QUARTZ\n→ ZEISS", "ZEISS\n→ ASML", "ASML\n→ TSMC", "TSMC\n→ NVDA", "TSMC\n→ AAPL"] },
+  ];
+  // Real checker result for a marker-only script: exit code + marker pass, everything else fails (reward 2/14 = 0.143).
+  const CHEAT_OK = new Set([0, 1]);
+  const CHEAT_REWARD = 0.143;
+
+  const cam = document.getElementById("cam");
+  const cells = [];   // {el, face, ck, x1, x2, x, y, w, row}
+  const rowLbls = [];
+  rows.forEach((r, ri) => {
+    const lbl = document.createElement("div");
+    lbl.className = "rowlbl"; lbl.textContent = r.label;
+    lbl.style.left = GX + "px"; lbl.style.top = ROW_Y[ri] + "px";
+    cam.appendChild(lbl); rowLbls.push(lbl);
+    const n = r.items.length, w = (GW - GAP * (n - 1)) / n;
+    r.items.forEach((name, ci) => {
+      const x = GX + ci * (w + GAP), y = ROW_Y[ri] + 38;
+      const el = document.createElement("div");
+      el.className = "cell"; el.style.left = x + "px"; el.style.top = y + "px"; el.style.width = w + "px";
+      const isAsml = ri === 1 && name === "ASML";
+      el.innerHTML =
+        '<div class="face">' +
+          '<svg class="mk" viewBox="0 0 22 22">' +
+            '<path class="ck" d="M3 11.5 L9 17.5 L19.5 5"/>' +
+            '<path class="x1" d="M5 5 L17 17"/><path class="x2" d="M17 5 L5 17"/>' +
+          '</svg>' +
+          '<div class="lbl ' + r.cls + '"></div>' +
+          (isAsml ? '<div class="detail"><span class="k">exposure</span>\n<span class="v">4,200,000 EUR</span>\n<span class="ok">= truth</span></div>' : '') +
+        '</div>';
+      el.querySelector(".lbl").textContent = name;
+      cam.appendChild(el);
+      cells.push({ el, face: el.querySelector(".face"), ck: el.querySelector(".ck"), x1: el.querySelector(".x1"),
+                   x2: el.querySelector(".x2"), detail: el.querySelector(".detail"), x, y, w, row: ri, asml: isAsml });
+    });
+  });
+  const ASML = cells.find((c) => c.asml);
+  const ACX = ASML.x + ASML.w / 2, ACY = ASML.y + CELL_H / 2;
+
+  const RC = 2 * Math.PI * 104;
+  const rprog = document.getElementById("rprog");
+  rprog.style.strokeDasharray = RC;
+
+  const STYLE = {
+    grey: { bg: "var(--paper-2)", bd: "var(--rule)", fg: "var(--muted)" },
+    ok:   { bg: "var(--ok-soft)", bd: "var(--ok)", fg: "var(--ink)" },
+    fail: { bg: "var(--fail-soft)", bd: "var(--fail)", fg: "var(--ink)" },
+  };
+  const setFace = (c, s) => { const S = STYLE[s]; c.face.style.background = S.bg; c.face.style.borderColor = S.bd; c.face.style.color = S.fg; };
+  const mark = (c, kind, p) => {
+    // kind: none | ok | fail ; p = draw progress
+    const on = (el, show, col) => { el.style.display = show ? "" : "none"; el.style.stroke = col; };
+    on(c.ck, kind === "ok", "var(--ok)"); on(c.x1, kind === "fail", "var(--fail)"); on(c.x2, kind === "fail", "var(--fail)");
+    if (kind === "ok") K.draw(c.ck, p);
+    if (kind === "fail") { K.draw(c.x1, K.clamp(p * 2)); K.draw(c.x2, K.clamp(p * 2 - 1)); }
+  };
+
+  const evalStart = (i) => 2.4 + i * 0.035;     // cheating script verdict wave
+  const flipStart = (i) => 3.75 + i * 0.075;    // epoch 2 flip wave
+  const FLIP = 0.35;
+
+  window.render = (t) => {
+    // ---- camera: gentle push-in, then zoom onto the ASML cell --------------
+    const s0 = 1 + 0.04 * K.ep(t, 0, 5.5, "linear");
+    const T0x = 960 - s0 * 960, T0y = 540 - s0 * 540;
+    const s1 = 1.35, T1x = 960 - s1 * ACX, T1y = 560 - s1 * ACY;
+    const z = K.ep(t, 5.5, 1.1, "inOutCubic");
+    const s = K.lerp(s0, s1, z), Tx = K.lerp(T0x, T1x, z), Ty = K.lerp(T0y, T1y, z);
+    cam.style.transform = `translate(${Tx}px, ${Ty}px) scale(${s})`;
+
+    // ---- title, row labels ------------------------------------------------
+    K.css(K.$("#title"), K.enter(t, 0.1, 0.7, 20));
+    rowLbls.forEach((l, i) => {
+      const e = K.enter(t, 0.25 + i * 0.12, 0.5, 12);
+      l.style.opacity = String(Number(e.opacity) * (1 - K.ep(t, 5.5, 0.5)));
+      l.style.transform = e.transform;
+    });
+
+    // ---- cells ------------------------------------------------------------
+    cells.forEach((c, i) => {
+      const pin = K.ep(t, 0.3 + i * 0.05, 0.55, "outBack");
+      const fadeIn = K.ep(t, 0.3 + i * 0.05, 0.35);
+      // flip
+      const a = 180 * K.ep(t, flipStart(i), FLIP, "inOutCubic");
+      const rot = a < 90 ? a : a - 180;
+      let state = "grey", kind = "none", p = 0;
+      if (a >= 90) { state = "ok"; kind = "ok"; p = K.ep(t, flipStart(i) + FLIP / 2, 0.25); }
+      else if (t >= evalStart(i)) {
+        const good = CHEAT_OK.has(i);
+        state = good ? "ok" : "fail"; kind = good ? "ok" : "fail"; p = K.ep(t, evalStart(i), 0.25);
+      }
+      setFace(c, state); mark(c, kind, p);
+      c.face.style.transform = `perspective(700px) rotateY(${rot}deg)`;
+      // pop when verdict lands
+      const pop = t >= evalStart(i) && t < evalStart(i) + 0.3 ? 1 + 0.06 * Math.sin(Math.PI * K.prog(t, evalStart(i), 0.3)) : 1;
+      // zoom phase: ASML lifts, others dim
+      const lift = c.asml ? K.ep(t, 5.7, 0.8, "outBack") : 0;
+      const dim = c.asml ? 1 : 1 - 0.62 * K.ep(t, 5.6, 0.6);
+      c.el.style.opacity = String(fadeIn * dim);
+      c.el.style.zIndex = c.asml ? "5" : "1";
+      c.el.style.transform = `translateY(${(1 - pin) * 18}px) scale(${(0.92 + 0.08 * pin) * pop * (1 + 0.5 * lift)})`;
+      c.el.style.transformOrigin = "50% 50%";
+      if (c.asml) { c.el.style.height = (CELL_H + 30 * lift) + "px"; c.el.style.marginTop = (-15 * lift) + "px"; }
+      c.face.style.boxShadow = lift > 0
+        ? `0 ${22 * lift}px ${48 * lift}px color-mix(in srgb, var(--ink) ${Math.round(16 * lift)}%, transparent)` : "none";
+      if (c.detail) {
+        c.detail.style.opacity = String(K.ep(t, 6.25, 0.5));
+      }
+    });
+
+    // ---- terminal ---------------------------------------------------------
+    const tw = K.enter(t, 0.5, 0.7, 20);
+    const termOut = 1 - K.ep(t, 5.5, 0.45);
+    K.css(K.$("#termwrap"), { opacity: String(Number(tw.opacity) * termOut), transform: tw.transform });
+    const sw = K.ep(t, 3.5, 0.35);
+    K.css(K.$("#tl1"), { opacity: String(K.ep(t, 1.5, 0.4) * (1 - sw)) });
+    K.css(K.$("#tl2"), { opacity: String(sw) });
+    const t1 = K.$("#t1"), t2 = K.$("#t2"), t3 = K.$("#t3"), t4 = K.$("#t4");
+    if (t < 3.5) {
+      t1.textContent = K.type("$ python etl.py", t, 1.6, 40);
+      t2.textContent = t >= 2.1 ? "ASSERTION_PASSED_GRAPH_COMMITTED" : "";
+      t2.className = "tl hit";
+      t3.textContent = "";
+      t4.textContent = t >= 2.25 ? "exit 0" : "";
+    } else {
+      t1.textContent = K.type("$ python etl.py", t, 3.55, 60);
+      t2.className = "tl";
+      t2.textContent = K.type("CLEANED_GRAPH_JSON: {6 nodes, 5 edges}", t, 3.75, 90);
+      t3.className = "tl hit";
+      t3.textContent = t >= 4.25 ? "ASSERTION_PASSED_GRAPH_COMMITTED" : "";
+      t4.textContent = t >= 4.4 ? "exit 0" : "";
+    }
+    [t1, t2, t3, t4].forEach((el) => { el.style.opacity = t >= 3.5 && t < 3.55 ? "0" : "1"; });
+
+    // ---- reward ring ------------------------------------------------------
+    K.css(K.$("#ring"), K.enter(t, 0.8, 0.7, 20));
+    let v;
+    if (t < 3.5) v = CHEAT_REWARD * K.ep(t, 2.4, 0.7);
+    else if (t < 3.75) v = CHEAT_REWARD * (1 - K.ep(t, 3.5, 0.22, "inOutCubic"));
+    else { v = 0; cells.forEach((c, i) => { v += K.ep(t, flipStart(i) + 0.1, 0.3); }); v /= cells.length; }
+    const failing = t < 3.6;
+    rprog.style.stroke = failing ? "var(--fail)" : "var(--ok)";
+    rprog.style.strokeDashoffset = String(RC * (1 - v));
+    rprog.style.opacity = v > 0.002 ? "1" : "0";
+    K.$("#rnum").textContent = v.toFixed(2);
+    const st = K.$("#rstat");
+    if (t >= 2.95 && t < 3.5) { st.textContent = "failed"; st.style.color = "var(--fail)"; st.style.opacity = String(K.ep(t, 2.95, 0.3)); }
+    else if (t >= 5.0) { st.textContent = "passed"; st.style.color = "var(--ok)"; st.style.opacity = String(K.ep(t, 5.0, 0.35)); }
+    else { st.textContent = ""; }
+    // the ring eases back a touch during the zoom so the focus stays on the cell
+    const rz = K.ep(t, 5.5, 1.1, "inOutCubic");
+    K.$("#ring").style.transform = `translateY(${(1 - K.ep(t, 0.8, 0.7)) * 20 + rz * 40}px) scale(${1 - 0.12 * rz})`;
+
+    // ---- captions ---------------------------------------------------------
+    K.css(K.$("#c1"), K.enter(t, 1.8, 0.5, 16, 3.35, 0.3));
+    K.css(K.$("#c2"), K.enter(t, 4.7, 0.45, 16, 5.4, 0.25));
+    K.css(K.$("#c3"), K.enter(t, 6.0, 0.6, 16));
+  };
+</script>
+</body>
+</html>

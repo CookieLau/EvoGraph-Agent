@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EvoGraph-Quant title</title>
+<link rel="stylesheet" href="../../brand/tokens.css">
+<style>
+  html, body { margin: 0; background: var(--paper); overflow-x: clip; }
+  #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden;
+           background: var(--paper); color: var(--ink); font-family: var(--font-body); }
+  #cam { position: absolute; inset: 0; transform-origin: 50% 46%; }
+  svg#g { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: visible; }
+  .dotgrid circle { fill: var(--rule); }
+  .edge { fill: none; stroke: var(--muted); stroke-width: 3; stroke-linecap: round; opacity: 0.5; }
+  .edge-hot { fill: none; stroke: var(--accent); stroke-width: 4.5; stroke-linecap: round; }
+  .node { filter: drop-shadow(0 8px 14px color-mix(in srgb, var(--ink) 16%, transparent)); }
+  .node .ring { fill: var(--paper); stroke-width: 4; }
+  .halo { fill: var(--accent-soft); }
+  .pulse { fill: none; stroke: var(--accent); stroke-width: 3; }
+  .particle { fill: var(--accent); }
+  .trail { fill: var(--accent); }
+  .wordmark { position: absolute; left: 0; right: 0; top: 566px; text-align: center;
+              font-family: var(--font-display); font-weight: var(--display-weight); font-size: 140px; line-height: 1;
+              letter-spacing: var(--tracking-display); color: var(--ink); }
+  .rule { position: absolute; left: 50%; top: 742px; width: 560px; height: var(--hair); margin-left: -280px;
+          background: var(--rule); transform-origin: center; }
+  .sub { position: absolute; left: 0; right: 0; top: 772px; text-align: center; font-size: 40px; color: var(--ink-2); }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="cam">
+    <svg id="g" viewBox="0 0 1920 1080" aria-hidden="true">
+      <g class="dotgrid" id="dotgrid"></g>
+      <g id="edges"></g>
+      <g id="hot"></g>
+      <g id="halos"></g>
+      <g id="pulses"></g>
+      <g id="particles"></g>
+      <g id="nodes"></g>
+    </svg>
+    <div class="wordmark" id="wm">EvoGraph-Quant</div>
+    <div class="rule" id="rule"></div>
+    <div class="sub" id="sub">A self-evolving ETL agent that learns from sandbox crashes.</div>
+  </div>
+</div>
+<script src="../scene_kit.js"></script>
+<script>
+  window.SCENE = { duration: 5, still: 4.4, title: "Title" };
+  const NS = "http://www.w3.org/2000/svg";
+  const mk = (tag, attrs, parent) => { const el = document.createElementNS(NS, tag);
+    for (const k in attrs) el.setAttribute(k, attrs[k]); if (parent) parent.appendChild(el); return el; };
+
+  // Supply-chain shape: raw material -> component -> equipment -> foundry -> two holdings (no names on screen).
+  const nodes = [
+    { id: "q", x: 370,  y: 400, c: "--node-t4",      at: 0.15 },
+    { id: "z", x: 670,  y: 300, c: "--node-t3",      at: 0.40 },
+    { id: "a", x: 970,  y: 390, c: "--node-t2",      at: 0.65 },
+    { id: "t", x: 1270, y: 290, c: "--node-t1",      at: 0.90 },
+    { id: "n", x: 1550, y: 190, c: "--node-holding", at: 1.15 },
+    { id: "p", x: 1550, y: 410, c: "--node-holding", at: 1.25 },
+  ];
+  const N = Object.fromEntries(nodes.map((n) => [n.id, n]));
+  const edges = [["q", "z", 0.45], ["z", "a", 0.70], ["a", "t", 0.95], ["t", "n", 1.20], ["t", "p", 1.30]];
+  const curve = (a, b) => { const mx = (a.x + b.x) / 2; return `M ${a.x} ${a.y} C ${mx} ${a.y}, ${mx} ${b.y}, ${b.x} ${b.y}`; };
+
+  // dot grid background
+  const grid = document.getElementById("dotgrid");
+  for (let y = 60; y < 1080; y += 48) for (let x = 48; x < 1920; x += 48) mk("circle", { cx: x, cy: y, r: 1.6 }, grid);
+
+  const baseEls = edges.map(([s, d]) => mk("path", { d: curve(N[s], N[d]), class: "edge" }, document.getElementById("edges")));
+  const hotEls = edges.map(([s, d]) => mk("path", { d: curve(N[s], N[d]), class: "edge-hot" }, document.getElementById("hot")));
+
+  // contagion particles: two waves from the raw material; the second takes the branch to the other holding
+  const SEG = 0.55;
+  const waves = [{ route: [0, 1, 2, 3], start: 1.4 }, { route: [0, 1, 2, 4], start: 2.4 }];
+  const TRAIL = 7;
+  waves.forEach((w) => {
+    const g = mk("g", {}, document.getElementById("particles"));
+    w.trail = [];
+    for (let k = TRAIL; k >= 1; k--) w.trail[k] = mk("circle", { class: "trail", r: 0 }, g);
+    w.soft = mk("circle", { class: "trail", r: 22, opacity: 0 }, g);
+    w.dot = mk("circle", { class: "particle", r: 11 }, g);
+  });
+
+  // pulses where a wave reaches a node
+  const arrivals = [];
+  waves.forEach((w) => w.route.forEach((ei, i) => arrivals.push({ node: edges[ei][1], time: w.start + (i + 1) * SEG })));
+  arrivals.forEach((a) => { a.el = mk("circle", { class: "pulse", cx: N[a.node].x, cy: N[a.node].y, r: 34, opacity: 0 }, document.getElementById("pulses")); });
+
+  // halos: the shock at the source, then the hits on each holding
+  const halos = [{ node: "q", time: 1.2 }, { node: "n", time: waves[0].start + 4 * SEG }, { node: "p", time: waves[1].start + 4 * SEG }];
+  halos.forEach((h) => { h.el = mk("circle", { class: "halo", cx: N[h.node].x, cy: N[h.node].y, r: 0 }, document.getElementById("halos")); });
+
+  nodes.forEach((n) => {
+    n.g = mk("g", { class: "node" }, document.getElementById("nodes"));
+    const ring = mk("circle", { class: "ring", r: 34 }, n.g); ring.style.stroke = `var(${n.c})`;
+    const core = mk("circle", { r: 13 }, n.g); core.style.fill = `var(${n.c})`;
+  });
+
+  const posOn = (route, gpos) => { const seg = Math.min(route.length - 1, Math.max(0, Math.floor(gpos)));
+    return K.along(baseEls[route[seg]], gpos - seg); };
+
+  window.render = (t) => {
+    K.css(K.$("#cam"), { transform: `translateY(56px) scale(${K.lerp(1, 1.03, K.ep(t, 0, 5, "inOutCubic"))})` });
+    grid.style.opacity = String(0.5 * K.ep(t, 0, 0.8));
+
+    nodes.forEach((n) => {
+      const s = Math.max(0, K.ep(t, n.at, 0.55, "outBack"));
+      n.g.setAttribute("transform", `translate(${n.x} ${n.y}) scale(${s})`);
+      n.g.style.opacity = String(K.prog(t, n.at, 0.12));
+    });
+    edges.forEach(([, , at], i) => K.draw(baseEls[i], K.ep(t, at, 0.5, "inOutCubic")));
+
+    const hot = edges.map(() => 0);
+    waves.forEach((w) => {
+      const g = (t - w.start) / SEG, L = w.route.length;
+      w.route.forEach((ei, i) => { hot[ei] = Math.max(hot[ei], K.clamp(g - i)); });
+      const vis = g > 0 && g < L ? 1 : g >= L ? 1 - K.prog(t, w.start + L * SEG, 0.2) : 0;
+      if (vis <= 0) { w.dot.setAttribute("opacity", 0); w.soft.setAttribute("opacity", 0);
+        for (let k = 1; k <= TRAIL; k++) w.trail[k].setAttribute("opacity", 0); return; }
+      const p = posOn(w.route, Math.min(g, L - 1e-4));
+      w.dot.setAttribute("cx", p.x); w.dot.setAttribute("cy", p.y); w.dot.setAttribute("opacity", vis);
+      w.soft.setAttribute("cx", p.x); w.soft.setAttribute("cy", p.y); w.soft.setAttribute("opacity", 0.16 * vis);
+      for (let k = 1; k <= TRAIL; k++) {
+        const gk = g - k * 0.07, el = w.trail[k];
+        if (gk <= 0) { el.setAttribute("opacity", 0); continue; }
+        const q = posOn(w.route, Math.min(gk, L - 1e-4));
+        el.setAttribute("cx", q.x); el.setAttribute("cy", q.y);
+        el.setAttribute("r", 9 * (1 - k / (TRAIL + 2))); el.setAttribute("opacity", 0.45 * (1 - k / (TRAIL + 1)) * vis);
+      }
+    });
+    hotEls.forEach((el, i) => K.draw(el, hot[i]));
+
+    arrivals.forEach((a) => {
+      if (t < a.time) { a.el.setAttribute("opacity", 0); return; }
+      const k = K.prog(t, a.time, 0.8);
+      a.el.setAttribute("r", 34 + 44 * K.ease.outCubic(k)); a.el.setAttribute("opacity", 0.55 * (1 - k));
+    });
+    halos.forEach((h) => h.el.setAttribute("r", 54 * Math.max(0, K.ep(t, h.time, 0.55, "outBack"))));
+
+    K.css(K.$("#wm"), K.enter(t, 2.3, 0.8, 30));
+    K.css(K.$("#rule"), { transform: `scaleX(${K.ep(t, 2.8, 0.6, "inOutCubic")})` });
+    K.css(K.$("#sub"), K.enter(t, 3.0, 0.7, 18));
+  };
+</script>
+</body>
+</html>

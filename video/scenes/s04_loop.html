@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The evolution loop</title>
+<link rel="stylesheet" href="../../brand/tokens.css">
+<style>
+  /* Scene s04: the evolution loop. Colours and fonts only via tokens. */
+  :root {
+    --clear: transparent;
+    --card: var(--paper);
+    --grid-dot: color-mix(in srgb, var(--rule) 85%, var(--clear));
+    --shadow: var(--shadow-card, 0 20px 40px color-mix(in srgb, var(--ink) 12%, var(--clear)));
+  }
+  html, body { margin: 0; background: var(--paper); overflow-x: clip; }
+  #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden;
+           background-color: var(--paper-2, var(--paper)); color: var(--ink); font-family: var(--font-body);
+           background-image: radial-gradient(circle, var(--grid-dot) 1.2px, var(--clear) 1.6px);
+           background-size: 36px 36px; }
+  #cam { position: absolute; inset: 0; transform-origin: 50% 46%; }
+  svg.layer { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: visible; }
+  #bg { z-index: 0; } #fg { z-index: 3; pointer-events: none; }
+
+  .card { position: absolute; width: 640px; height: 320px; box-sizing: border-box; z-index: 2;
+          background: var(--card); border: 1.5px solid var(--rule); border-radius: var(--radius, 12px);
+          box-shadow: var(--shadow); opacity: 0; }
+  .icon { position: absolute; left: 34px; top: 30px; width: 96px; height: 96px; overflow: visible; }
+  .ic { fill: none; stroke: var(--ink); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+  .title { position: absolute; left: 150px; top: 36px; font-family: var(--font-display);
+           font-weight: var(--display-weight, 700); letter-spacing: var(--tracking-display, -0.02em);
+           font-size: 40px; line-height: 1.1; color: var(--ink); white-space: nowrap; }
+  .sub { position: absolute; left: 150px; top: 88px; font-family: var(--font-mono); font-size: 21px;
+         color: var(--ink-2); white-space: nowrap; }
+  .content { position: absolute; left: 36px; right: 36px; top: 152px; bottom: 24px; }
+  .pill { position: absolute; right: 28px; top: 34px; font-family: var(--font-mono); font-size: 20px;
+          color: var(--ink-2); border: 1px solid var(--rule); border-radius: 999px; padding: 3px 14px;
+          background: var(--paper); opacity: 0; white-space: nowrap; }
+  .pill.ok { color: var(--ok); border-color: var(--ok); }
+  .pill.fail { color: var(--fail); border-color: var(--fail); }
+
+  /* Nosana */
+  .meta { position: absolute; left: 0; top: 0; font-family: var(--font-mono); font-size: 20px; color: var(--ink);
+          font-weight: 500; white-space: nowrap; opacity: 0; }
+  .code { position: absolute; left: 0; top: 34px; right: 0; }
+  .cl { height: 25px; font-family: var(--font-mono); font-size: 17.5px; line-height: 25px; color: var(--ink-2);
+        white-space: pre; overflow: hidden; }
+  .cur { display: inline-block; width: 9px; height: 19px; background: var(--ink); vertical-align: -3px; margin-left: 2px; }
+  .cell { fill: var(--ink); }
+
+  /* Daytona */
+  .st { position: absolute; left: 0; top: 0; opacity: 0; white-space: nowrap; }
+  .muted { font-family: var(--font-mono); font-size: 24px; color: var(--muted); }
+  .big { font-family: var(--font-mono); font-size: 58px; font-weight: 500; line-height: 1; }
+  .err { font-family: var(--font-mono); font-size: 26px; margin-top: 16px; }
+  .bar { width: 380px; height: 6px; background: var(--rule); border-radius: 3px; margin-top: 18px; overflow: hidden; }
+  .fill { height: 100%; width: 0; background: var(--ink); }
+
+  /* Gradient */
+  .dg { position: absolute; left: 0; height: 32px; font-family: var(--font-mono); font-size: 22px; line-height: 32px;
+        color: var(--ink); white-space: pre; }
+  .dg .nb { display: inline-block; width: 30px; color: var(--ink); font-weight: 600; opacity: 0; }
+
+  /* Prompt diff */
+  .dl { position: absolute; left: 0; right: 0; height: 24px; line-height: 24px; font-family: var(--font-mono);
+        font-size: 19.5px; color: var(--ink-2); padding-left: 34px; border-radius: 4px; white-space: pre; box-sizing: border-box; }
+  .dl .pf { position: absolute; left: 10px; top: 0; font-weight: 600; opacity: 0; }
+  .dl .tx { position: relative; display: inline-block; }
+  .dl .strike { position: absolute; left: 0; top: 50%; height: 2px; width: 0; background: var(--fail); }
+  .vflip { display: inline-block; transform-origin: 50% 60%; }
+  #v2 { color: var(--ok); }
+
+  /* gap labels + hub */
+  .gl { font-family: var(--font-mono); font-size: 22px; fill: var(--ink-2); }
+  .gl.fail { fill: var(--fail); } .gl.ok { fill: var(--ok); }
+  .pk-text { font-family: var(--font-mono); font-size: 19px; font-weight: 600; text-anchor: middle; dominant-baseline: central; }
+  #hub { position: absolute; left: 810px; top: 418px; width: 300px; text-align: center; z-index: 3; opacity: 0; }
+  #hub .ew { position: relative; height: 46px; }
+  #hub .ep { position: absolute; left: 0; right: 0; top: 0; font-family: var(--font-display);
+             font-weight: var(--display-weight, 700); letter-spacing: var(--tracking-display, -0.02em);
+             font-size: 38px; line-height: 46px; color: var(--ink); }
+  #hub .rw { font-family: var(--font-mono); font-size: 24px; color: var(--ink-2); opacity: 0; }
+
+  .caption { position: absolute; left: 120px; bottom: 96px; font-size: 40px; line-height: 1.2; color: var(--ink-2);
+             max-width: 1300px; opacity: 0; z-index: 5; font-family: var(--font-body); }
+
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="cam">
+    <svg class="layer" id="bg" viewBox="0 0 1920 1080">
+      <path id="loop" d="M 280 240 H 1640 V 700 H 280 Z" fill="none" style="stroke: var(--ink-2); stroke-width: 2.5"/>
+      <path id="glow" d="M 280 240 H 1640 V 700 H 280 Z" fill="none" style="stroke: var(--ok); stroke-width: 6; stroke-linecap: round; opacity: 0"/>
+      <g id="amb"></g>
+    </svg>
+
+    <!-- 1. Nosana GPU -->
+    <div class="card" id="c-nos" style="left:160px; top:80px">
+      <svg class="icon" viewBox="0 0 96 96">
+        <rect class="ic" x="20" y="20" width="56" height="56" rx="6"/>
+        <path class="ic" id="pins" d=""/>
+        <rect class="ic" x="33" y="33" width="30" height="30" rx="2"/>
+        <g id="cells"></g>
+      </svg>
+      <div class="title">Nosana GPU</div>
+      <div class="sub">qwen3.8:27b on RTX 5090</div>
+      <div class="content">
+        <div class="meta" id="meta1">Epoch 1, 72 lines, 4.5 s</div>
+        <div class="meta" id="meta2">Epoch 2, 108 lines, 10.7 s</div>
+        <div class="code" id="code1"></div>
+        <div class="code" id="code2"></div>
+      </div>
+    </div>
+
+    <!-- 2. Daytona sandbox -->
+    <div class="card" id="c-day" style="left:1120px; top:80px">
+      <svg class="icon" viewBox="0 0 96 96">
+        <path class="ic" d="M48 12 L80 28 L48 44 L16 28 Z"/>
+        <path class="ic" d="M16 28 L16 62 L48 78 L48 44"/>
+        <path class="ic" d="M80 28 L80 62 L48 78"/>
+        <circle class="ic" id="badge" cx="76" cy="74" r="15" style="fill: var(--card)"/>
+        <ellipse class="ic" cx="76" cy="74" rx="6" ry="14.5" style="stroke-width: 1.8"/>
+        <path class="ic" d="M61.5 74 H90.5" style="stroke-width: 1.8"/>
+        <path class="ic" id="slash" d="M66 63 L86 85" style="stroke: var(--fail); stroke-width: 3"/>
+      </svg>
+      <div class="title">Daytona sandbox</div>
+      <div class="sub">network_block_all=True</div>
+      <div class="pill fail" id="pillFail">2.1 s</div>
+      <div class="pill ok" id="pillOk">1.4 s</div>
+      <div class="content">
+        <div class="st" id="stWait"><div class="muted">offline, waiting for code</div></div>
+        <div class="st" id="stRun"><div class="muted" style="color: var(--ink)">running</div><div class="bar"><div class="fill" id="bar"></div></div></div>
+        <div class="st" id="stFail"><div class="big" style="color: var(--fail)">exit 1</div><div class="err" style="color: var(--fail)">ValueError: '1.5M'</div></div>
+        <div class="st" id="stOk"><div class="big" style="color: var(--ok)">exit 0</div><div class="err" style="color: var(--ok)">reward 1.0</div></div>
+      </div>
+    </div>
+
+    <!-- 3. Textual gradient -->
+    <div class="card" id="c-grad" style="left:1120px; top:540px">
+      <svg class="icon" viewBox="0 0 96 96">
+        <path class="ic" d="M16 22 H80 L48 80 Z"/>
+        <path class="ic" d="M31 32 H65 L48 63 Z" style="stroke-width: 1.8"/>
+      </svg>
+      <div class="title">Textual gradient</div>
+      <div class="sub">read from the traceback</div>
+      <div class="pill" id="pillGrad">7.5 s</div>
+      <div class="content">
+        <div class="st muted" id="gWait" style="opacity:1">waiting for the loss</div>
+        <div class="dg" id="dg0" style="top:0"><span class="nb">∇</span><span class="tx"></span></div>
+        <div class="dg" id="dg1" style="top:40px"><span class="nb">∇</span><span class="tx"></span></div>
+        <div class="dg" id="dg2" style="top:80px"><span class="nb">∇</span><span class="tx"></span></div>
+      </div>
+    </div>
+
+    <!-- 4. Prompt v1 -> v2 -->
+    <div class="card" id="c-prm" style="left:160px; top:540px">
+      <svg class="icon" viewBox="0 0 96 96">
+        <path class="ic" d="M24 12 H60 L74 26 V84 H24 Z"/>
+        <path class="ic" d="M60 12 V26 H74"/>
+        <path class="ic" d="M33 42 H65 M33 53 H65 M33 64 H55"/>
+      </svg>
+      <div class="title">Prompt <span>v1</span> <span id="arr" class="vflip">→</span> <span id="v2" class="vflip">v2</span></div>
+      <div class="sub">AdalFlow Parameter</div>
+      <div class="content">
+        <div class="dl" id="d0" style="top:0"><span class="pf" style="color: var(--fail)">−</span><span class="tx">float(exposure_raw)<span class="strike"></span></span></div>
+        <div class="dl" id="d1" style="top:27px"><span class="pf" style="color: var(--fail)">−</span><span class="tx">float(weight)<span class="strike"></span></span></div>
+        <div class="dl" id="a0" style="top:54px"><span class="pf" style="color: var(--ok)">+</span><span class="tx">parse $ € USD EUR M K</span></div>
+        <div class="dl" id="a1" style="top:81px"><span class="pf" style="color: var(--ok)">+</span><span class="tx">strip the CRITICAL_ prefix</span></div>
+        <div class="dl" id="a2" style="top:108px"><span class="pf" style="color: var(--ok)">+</span><span class="tx">null exposure becomes 0.0</span></div>
+      </div>
+    </div>
+
+    <svg class="layer" id="fg" viewBox="0 0 1920 1080">
+      <polygon class="ah" points="1094,230 1112,240 1094,250"/>
+      <polygon class="ah" points="1630,514 1640,532 1650,514"/>
+      <polygon class="ah" points="826,690 808,700 826,710"/>
+      <polygon class="ah" points="270,426 280,408 290,426"/>
+      <text class="gl" id="lCode" x="960" y="214" text-anchor="middle" style="opacity:0">code</text>
+      <text class="gl fail" id="lLoss" x="1664" y="478" style="opacity:0">loss</text>
+      <text class="gl" id="lUpd" x="960" y="742" text-anchor="middle" style="opacity:0">update</text>
+      <text class="gl ok" id="lV2" x="336" y="478" style="opacity:0">new prompt</text>
+      <g id="trails"></g>
+      <g id="pk1" style="opacity:0"><rect x="-36" y="-19" width="72" height="38" rx="8" style="fill: var(--card); stroke: var(--ink); stroke-width: 2.5"/><text class="pk-text" style="fill: var(--ink)">{ }</text></g>
+      <g id="pkLoss" style="opacity:0"><circle r="14" style="fill: var(--fail)"/></g>
+      <g id="pkGrad" style="opacity:0"><circle r="17" style="fill: var(--card); stroke: var(--ink); stroke-width: 2.5"/><text class="pk-text" style="fill: var(--ink)">∇</text></g>
+      <g id="pkV2" style="opacity:0"><rect x="-28" y="-17" width="56" height="34" rx="8" style="fill: var(--ok-soft); stroke: var(--ok); stroke-width: 2.5"/><text class="pk-text" style="fill: var(--ok)">v2</text></g>
+      <g id="pk2" style="opacity:0"><rect x="-36" y="-19" width="72" height="38" rx="8" style="fill: var(--card); stroke: var(--ok); stroke-width: 2.5"/><text class="pk-text" style="fill: var(--ok)">{ }</text></g>
+    </svg>
+
+    <div id="hub">
+      <div class="ew"><div class="ep" id="ep1">Epoch 1</div><div class="ep" id="ep2" style="opacity:0">Epoch 2</div></div>
+      <div class="rw" id="rw">reward <span id="rwv">0.0</span></div>
+    </div>
+  </div>
+
+  <div class="caption" id="cap1">Generate on private GPUs.</div>
+  <div class="caption" id="cap2">Execute offline. Crashes become the loss.</div>
+  <div class="caption" id="cap3">Rewrite the prompt from the traceback.</div>
+  <div class="caption" id="cap4">Run again. Verified.</div>
+</div>
+<script src="../scene_kit.js"></script>
+<script>
+  window.SCENE = { duration: 14, still: 12.5, title: "The evolution loop" };
+
+  const NS = "http://www.w3.org/2000/svg";
+  const $ = (s) => document.querySelector(s);
+  const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const mix = (c, pct, base) => `color-mix(in srgb, ${c} ${K.clamp(pct, 0, 100).toFixed(1)}%, ${base})`;
+  const win = (t, a, b, fi = 0.3, fo = 0.3) => K.ep(t, a, fi) * (1 - K.ep(t, b, fo));
+  const bump = (t, a, d) => { const p = K.prog(t, a, d); return p <= 0 || p >= 1 ? 0 : Math.sin(Math.PI * p); };
+
+  // --- static construction (deterministic) ---
+  (function build() {
+    let d = "";
+    for (let k = 0; k < 5; k++) { const v = 29 + k * 9.5;
+      d += `M${v} 9 V20 M${v} 76 V87 M9 ${v} H20 M76 ${v} H87 `; }
+    $("#pins").setAttribute("d", d);
+    const cells = $("#cells");
+    for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) {
+      const e = document.createElementNS(NS, "rect");
+      e.setAttribute("x", 36 + c * 8.6); e.setAttribute("y", 36 + r * 8.6);
+      e.setAttribute("width", 6.6); e.setAttribute("height", 6.6); e.setAttribute("rx", 1);
+      e.setAttribute("class", "cell"); cells.appendChild(e);
+    }
+    const amb = $("#amb");
+    for (let i = 0; i < 10; i++) { const c = document.createElementNS(NS, "circle");
+      c.setAttribute("r", 3); c.style.fill = "var(--muted)"; amb.appendChild(c); }
+    const tr = $("#trails");
+    for (let i = 0; i < 5 * 4; i++) { const c = document.createElementNS(NS, "circle"); tr.appendChild(c); }
+  })();
+
+  const CODE1 = [
+    "rows = json.load(open('payload.json'))",
+    "raw = n['exposure_raw'].replace('$', '')",
+    "exp = float(raw.replace(',', ''))",
+    "w = float(e['weight'])",
+  ];
+  const CODE2 = [
+    "def money(s):  # $ € USD EUR M K",
+    "    v, unit = re.match(PAT, s).groups()",
+    "    return float(v) * MULT.get(unit, 1)",
+    "w = float(str(w).removeprefix('CRITICAL_'))",
+  ];
+  const DIAG = [
+    "'1.5M EUR' needs an M multiplier",
+    "strip CRITICAL_ prefix",
+    "null exposure defaults to 0.0",
+  ];
+  const mkLines = (host, n) => { for (let i = 0; i < n; i++) { const d = document.createElement("div"); d.className = "cl"; host.appendChild(d); } };
+  mkLines($("#code1"), CODE1.length); mkLines($("#code2"), CODE2.length);
+
+  const loop = $("#loop"), glow = $("#glow");
+  const L = loop.getTotalLength();               // 3640
+  const F = (px) => px / 3640;
+  const FR = { nosR: F(520), dayL: F(840), dayB: F(1520), gradT: F(1660), gradL: F(2340), prmR: F(2660), prmT: F(3340), nosB: F(3480) };
+  const AF = [F(830), F(1650), F(2650), F(3470)];
+  const cards = ["#c-nos", "#c-day", "#c-grad", "#c-prm"].map($);
+  const icons = cards.map((c) => Array.from(c.querySelectorAll(".ic")));
+  const arrows = Array.from(document.querySelectorAll(".ah"));
+  const trailEls = Array.from($("#trails").children);
+
+  function typeLine(el, text, t, start, cps, cursor = true) {
+    const shown = K.type(text, t, start, cps);
+    const typing = cursor && t >= start && shown.length < text.length;
+    el.innerHTML = esc(shown) + (typing ? '<span class="cur"></span>' : "");
+  }
+
+  function packet(id, slot, t, t0, t1, f0, f1, colour) {
+    const g = $(id);
+    const trails = trailEls.slice(slot * 4, slot * 4 + 4);
+    if (t < t0 || t > t1 + 0.22) { g.style.opacity = 0; trails.forEach((c) => (c.style.opacity = 0)); return; }
+    const p = K.ease.inOutCubic(K.prog(t, t0, t1 - t0));
+    const f = K.lerp(f0, f1, p);
+    const pt = K.along(loop, f);
+    const a = K.ep(t, t0, 0.08) * (1 - K.ep(t, t1, 0.22));
+    g.setAttribute("transform", `translate(${pt.x.toFixed(1)} ${pt.y.toFixed(1)}) scale(${(0.85 + 0.15 * a).toFixed(3)})`);
+    g.style.opacity = String(a);
+    trails.forEach((c, k) => {
+      const q = K.along(loop, Math.max(f0, f - (k + 1) * 0.0048));
+      c.setAttribute("cx", q.x.toFixed(1)); c.setAttribute("cy", q.y.toFixed(1));
+      c.setAttribute("r", String(6 - k));
+      c.style.fill = colour;
+      c.style.opacity = String(a * (1 - (k + 1) / 5) * (p < 1 ? 1 : 0.4));
+    });
+  }
+
+  window.render = (t) => {
+    // gentle camera push
+    const cp = K.ep(t, 0, 13.6, "inOutCubic");
+    $("#cam").style.transform = `translateY(${K.lerp(18, 0, cp).toFixed(2)}px) scale(${K.lerp(0.952, 1, cp).toFixed(4)})`;
+
+    // loop draw-on + arrowheads
+    const dp = K.ep(t, 0.35, 1.7, "inOutCubic");
+    K.draw(loop, dp);
+    const okTint = K.ep(t, 12.6, 0.8);
+    loop.style.stroke = mix("var(--ok)", 60 * okTint, "var(--ink-2)");
+    arrows.forEach((a, i) => { a.style.opacity = String(K.clamp((dp - AF[i]) / 0.03));
+      a.style.fill = mix("var(--ok)", 60 * okTint, "var(--ink-2)"); });
+
+    // cards: staggered entrance; Daytona shakes on the crash
+    cards.forEach((c, i) => {
+      const s = 0.1 + i * 0.22;
+      const pb = K.ep(t, s, 0.75, "outBack");
+      let x = 0;
+      if (i === 1 && t > 4.6 && t < 5.05) x = Math.sin((t - 4.6) * 62) * 7 * (1 - K.prog(t, 4.6, 0.45));
+      c.style.opacity = String(K.ep(t, s, 0.45));
+      c.style.transform = `translate(${x.toFixed(2)}px, ${((1 - pb) * 40).toFixed(2)}px) scale(${(0.94 + 0.06 * pb).toFixed(4)})`;
+      icons[i].forEach((el, k) => { const s0 = 0.45 + i * 0.22 + k * 0.05;
+        K.draw(el, K.ep(t, s0, 0.9, "inOutCubic")); el.style.opacity = String(K.ep(t, s0, 0.15)); });
+    });
+
+    // Nosana: chip cells flicker while generating
+    const gen = (t >= 2.0 && t < 3.7) || (t >= 11.0 && t < 11.95);
+    Array.from($("#cells").children).forEach((c, i) => {
+      const on = gen && ((Math.floor(t * 14) + i * 4) % 9) < 3;
+      c.style.opacity = gen ? (on ? 0.9 : 0.18) : 0.1;
+    });
+    K.css($("#meta1"), K.enter(t, 2.0, 0.4, 10, 10.85, 0.25));
+    K.css($("#meta2"), K.enter(t, 11.0, 0.35, 10));
+    $("#meta2").style.color = "var(--ok)";
+    $("#code1").style.opacity = String(1 - K.ep(t, 10.85, 0.25));
+    Array.from($("#code1").children).forEach((el, i) => typeLine(el, CODE1[i], t, 2.15 + i * 0.36, 115));
+    $("#code2").style.opacity = String(K.ep(t, 11.0, 0.15));
+    Array.from($("#code2").children).forEach((el, i) => typeLine(el, CODE2[i], t, 11.1 + i * 0.19, 170));
+
+    // packets travelling the loop
+    packet("#pk1", 0, t, 3.6, 4.2, FR.nosR, FR.dayL, "var(--ink)");
+    packet("#pkLoss", 1, t, 6.0, 6.8, FR.dayB, FR.gradT, "var(--fail)");
+    packet("#pkGrad", 2, t, 8.8, 9.35, FR.gradL, FR.prmR, "var(--ink)");
+    packet("#pkV2", 3, t, 10.45, 10.95, FR.prmT, FR.nosB, "var(--ok)");
+    packet("#pk2", 4, t, 11.8, 12.15, FR.nosR, FR.dayL, "var(--ok)");
+
+    // Daytona states
+    const waitP = 1 - K.ep(t, 4.1, 0.15);
+    const run1 = K.ep(t, 4.2, 0.1) * (1 - K.ep(t, 4.55, 0.1));
+    const run2 = K.ep(t, 12.12, 0.06) * (1 - K.ep(t, 12.27, 0.06));
+    const failP = K.ep(t, 4.6, 0.3) * (1 - K.ep(t, 12.1, 0.15));
+    const okP = K.ep(t, 12.3, 0.15);
+    const st = (id, p) => K.css($(id), { opacity: String(p), transform: `translateY(${((1 - p) * 12).toFixed(2)}px)` });
+    st("#stWait", waitP * K.ep(t, 0.6, 0.4)); st("#stRun", Math.max(run1, run2)); st("#stFail", failP); st("#stOk", okP);
+    $("#bar").style.width = (t < 8 ? K.prog(t, 4.2, 0.38) : K.prog(t, 12.12, 0.17)) * 100 + "%";
+    const day = $("#c-day");
+    const failBg = failP * K.lerp(85, 45, K.ep(t, 6.4, 1.6));
+    day.style.background = okP > 0 ? mix("var(--ok-soft)", 80 * okP, "var(--card)") : mix("var(--fail-soft)", failBg, "var(--card)");
+    day.style.borderColor = mix("var(--ok)", 100 * okP, mix("var(--fail)", 100 * failP, "var(--rule)"));
+    $("#pillFail").style.opacity = String(failP);
+    $("#pillOk").style.opacity = String(okP);
+
+    // Textual gradient
+    const grad = $("#c-grad");
+    $("#gWait").style.opacity = String(1 - K.ep(t, 6.75, 0.2));
+    const flash = K.ep(t, 6.75, 0.1) * (1 - K.ep(t, 7.0, 0.45));
+    const engaged = K.ep(t, 7.0, 0.5);
+    grad.style.borderColor = mix("var(--fail)", 100 * flash, mix("var(--ink)", 70 * engaged, "var(--rule)"));
+    DIAG.forEach((txt, i) => {
+      const row = $("#dg" + i), s = 6.95 + i * 0.62;
+      row.querySelector(".nb").style.opacity = String(K.ep(t, s, 0.15));
+      typeLine(row.querySelector(".tx"), txt, t, s + 0.08, 48);
+    });
+    K.css($("#pillGrad"), K.enter(t, 7.0, 0.4, 6));
+
+    // Prompt diff v1 -> v2
+    const prm = $("#c-prm");
+    const pf = K.ep(t, 9.25, 0.1) * (1 - K.ep(t, 9.45, 0.5));
+    prm.style.borderColor = mix("var(--ink)", 80 * pf, "var(--rule)");
+    ["#d0", "#d1"].forEach((id, i) => {
+      const p = K.ep(t, 9.35 + i * 0.12, 0.45);
+      const el = $(id);
+      el.style.background = mix("var(--fail-soft)", 90 * p, "var(--card)");
+      el.style.color = mix("var(--muted)", 100 * p, "var(--ink-2)");
+      el.querySelector(".pf").style.opacity = String(p);
+      el.querySelector(".strike").style.width = (p * 100).toFixed(1) + "%";
+    });
+    ["#a0", "#a1", "#a2"].forEach((id, i) => {
+      const p = K.ep(t, 9.75 + i * 0.28, 0.4);
+      const el = $(id);
+      el.style.opacity = String(p);
+      el.style.transform = `translateX(${((1 - p) * -24).toFixed(2)}px)`;
+      el.style.background = mix("var(--ok-soft)", 90, "var(--card)");
+      el.style.color = "var(--ink)";
+      el.querySelector(".pf").style.opacity = String(p);
+    });
+    const vf = K.ep(t, 10.15, 0.45, "outBack");
+    K.css($("#v2"), { opacity: String(K.ep(t, 10.15, 0.2)), transform: `perspective(400px) rotateX(${((1 - vf) * 90).toFixed(2)}deg)` });
+    $("#arr").style.opacity = String(K.ep(t, 10.1, 0.25));
+
+    // hub: epoch + reward
+    $("#hub").style.opacity = String(K.ep(t, 1.8, 0.5));
+    K.css($("#ep1"), { opacity: String(1 - K.ep(t, 10.95, 0.2)), transform: `translateY(${(-14 * K.ep(t, 10.95, 0.25)).toFixed(2)}px)` });
+    K.css($("#ep2"), { opacity: String(K.ep(t, 11.0, 0.25)), transform: `translateY(${(14 * (1 - K.ep(t, 11.0, 0.3))).toFixed(2)}px)` });
+    $("#rw").style.opacity = String(K.ep(t, 4.7, 0.3));
+    const passed = t >= 12.25;
+    $("#rwv").textContent = passed ? K.count(1, t, 12.25, 0.2, 0, "outCubic").toFixed(1) : "0.0";
+    $("#rw").style.color = passed ? "var(--ok)" : "var(--fail)";
+
+    // gap labels
+    $("#lCode").style.opacity = String(Math.max(win(t, 2.5, 4.5), K.ep(t, 11.6, 0.3)));
+    $("#lLoss").style.opacity = String(win(t, 5.95, 9.3));
+    $("#lUpd").style.opacity = String(win(t, 8.75, 10.6));
+    $("#lV2").style.opacity = String(win(t, 10.4, 11.7));
+
+    // ambient flow in the gaps
+    Array.from($("#amb").children).forEach((c, i) => {
+      const q = K.along(loop, (i / 10 + t * 0.032) % 1);
+      c.setAttribute("cx", q.x.toFixed(1)); c.setAttribute("cy", q.y.toFixed(1));
+      c.style.opacity = String(0.35 * K.ep(t, 2.0, 0.6) * (1 - 0.6 * okTint));
+    });
+
+    // the loop lights up once, softly
+    const gp = K.prog(t, 12.55, 1.35);
+    glow.style.strokeDasharray = `240 ${L.toFixed(0)}`;
+    glow.style.strokeDashoffset = String((-L * K.ease.inOutCubic(gp)).toFixed(1));
+    glow.style.opacity = String(0.9 * bump(t, 12.55, 1.35));
+    cards.forEach((c, i) => {
+      const r = bump(t, 12.6 + i * 0.16, 0.75);
+      c.style.boxShadow = `var(--shadow), 0 0 0 ${(6 * r).toFixed(2)}px ${mix("var(--ok)", 30 * r, "var(--clear)")}`;
+    });
+
+    // captions
+    K.css($("#cap1"), K.enter(t, 2.0, 0.5, 18, 4.3, 0.35));
+    K.css($("#cap2"), K.enter(t, 4.5, 0.5, 18, 8.8, 0.35));
+    K.css($("#cap3"), K.enter(t, 9.0, 0.5, 18, 11.8, 0.35));
+    K.css($("#cap4"), K.enter(t, 12.0, 0.5, 18));
+  };
+</script>
+</body>
+</html>

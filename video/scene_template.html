@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scene template</title>
+<link rel="stylesheet" href="../../brand/tokens.css">
+<style>
+  /* Copy this file to video/scenes/sNN_name.html. Colours and fonts ONLY via var(--token). */
+  html, body { margin: 0; background: var(--paper); overflow-x: clip; }
+  #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden;
+           background: var(--paper); color: var(--ink); font-family: var(--font-body); }
+  .display { font-family: var(--font-display); font-weight: 600; letter-spacing: -0.01em; }
+  .mono { font-family: var(--font-mono); }
+  .caption { position: absolute; left: 120px; bottom: 96px; font-size: 40px; color: var(--ink-2); max-width: 1200px; }
+  .dot { position: absolute; width: 28px; height: 28px; border-radius: 50%; background: var(--accent); }
+  @keyframes pulse { from { transform: scale(1); } 50% { transform: scale(1.25); } to { transform: scale(1); } }
+  .pulse { animation: pulse 1.2s ease-in-out infinite; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="dot pulse" id="d" style="left:900px;top:500px"></div>
+  <div class="caption" id="cap">Text supports the picture, never the other way round.</div>
+</div>
+<script src="../scene_kit.js"></script>
+<script>
+  window.SCENE = { duration: 4, still: 3, title: "Template" };
+  window.render = (t) => {
+    K.css(K.$("#d"), { left: K.lerp(300, 1500, K.ep(t, 0.2, 2.5, "inOutCubic")) + "px" });
+    K.css(K.$("#cap"), K.enter(t, 0.8));
+  };
+</script>
+</body>
+</html>

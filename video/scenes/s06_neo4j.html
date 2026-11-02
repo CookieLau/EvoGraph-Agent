@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Neo4j commit</title>
+<link rel="stylesheet" href="../../brand/tokens.css">
+<style>
+  html, body { margin: 0; background: var(--paper); overflow-x: clip; }
+  #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden;
+           background: var(--paper); color: var(--ink); font-family: var(--font-body); }
+  #cam { position: absolute; inset: 0; transform-origin: 50% 50%; }
+  .display { font-family: var(--font-display); font-weight: var(--display-weight, 700);
+             letter-spacing: var(--tracking-display, -0.02em); }
+  .mono { font-family: var(--font-mono); }
+
+  /* typed MERGE line, top left */
+  #unwind { position: absolute; left: 120px; top: 84px; font-size: 28px; color: var(--ink); white-space: pre; }
+  .caret { display: inline-block; width: 0.55em; height: 1em; margin-left: 2px; vertical-align: -0.12em;
+           background: var(--ink); }
+
+  svg#g { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: visible; }
+  .wire { fill: none; stroke: var(--ink-2); stroke-width: 2; }
+  .wire-soft { fill: none; stroke: var(--rule); stroke-width: 2; }
+  .edge { fill: none; stroke: var(--rule); stroke-width: 3; stroke-linecap: round; }
+  .edge-hot { fill: none; stroke: var(--accent); stroke-width: 4; stroke-linecap: round; }
+  .arrow-hot { fill: var(--accent); }
+  .arrow-mute { fill: var(--muted); }
+  .node-c { fill: var(--paper); stroke-width: 3; }
+  .node-label { font-family: var(--font-body); font-size: 22px; fill: var(--ink); text-anchor: middle; }
+  .pill-r { fill: var(--paper); stroke: var(--accent); stroke-width: 1.5; }
+  .pill-t { font-family: var(--font-mono); font-size: 20px; fill: var(--accent); text-anchor: middle; dominant-baseline: central; }
+  .pill-r-mute { fill: var(--paper); stroke: var(--muted); stroke-width: 1.5; }
+  .pill-t-mute { font-family: var(--font-mono); font-size: 20px; fill: var(--ink-2); text-anchor: middle; dominant-baseline: central; }
+  .particle { fill: var(--accent); }
+  .lin-line { fill: none; stroke: var(--ink-2); stroke-width: 1.5; }
+  .lin-dash { fill: none; stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 4 5; }
+  .lin-label { font-family: var(--font-mono); font-size: 15px; fill: var(--muted); text-anchor: middle; }
+
+  /* cards landing in the database */
+  .card { position: absolute; width: 176px; height: 60px; box-sizing: border-box; border-radius: 10px;
+          background: var(--paper); border: var(--hair) solid var(--rule); box-shadow: var(--shadow-card);
+          display: flex; align-items: center; justify-content: space-between; padding: 0 12px 0 16px; overflow: hidden; }
+  .card .bar { position: absolute; left: 0; top: 0; bottom: 0; width: 5px; }
+  .card .nm { font-size: 22px; font-weight: 600; color: var(--ink); }
+  .card .tag { font-family: var(--font-mono); font-size: 14px; color: var(--ok); border: var(--hair) solid var(--ok);
+               border-radius: 6px; padding: 2px 6px; background: var(--ok-soft); }
+
+  #dbname { position: absolute; left: 220px; top: 764px; width: 440px; text-align: center; font-size: 40px; color: var(--ink); }
+  #dbcounts { position: absolute; left: 220px; top: 822px; width: 440px; text-align: center; font-size: 24px; color: var(--ink-2); }
+  #dbcounts span { margin: 0 14px; }
+  #dbcounts b { font-family: var(--font-mono); font-weight: 500; color: var(--ink); }
+
+  /* equation */
+  #eq { position: absolute; left: 880px; top: 492px; font-size: 44px; color: var(--ink); white-space: nowrap; }
+  #eq .f { display: inline-block; }
+  #eq .x { color: var(--muted); margin: 0 12px; }
+  #eq .res { color: var(--accent); font-variant-numeric: tabular-nums; }
+
+  /* cypher panel */
+  #cy { position: absolute; left: 860px; top: 566px; width: 940px; height: 100px; box-sizing: border-box;
+        border-radius: 12px; background: var(--paper-2); border: var(--hair) solid var(--rule); padding: 16px 22px; }
+  #cy div { font-family: var(--font-mono); font-size: 22px; line-height: 34px; color: var(--ink); white-space: pre; }
+  #cy .kw { color: var(--ink-2); }
+
+  /* results */
+  .res-card { position: absolute; top: 690px; width: 450px; height: 116px; box-sizing: border-box; border-radius: 12px;
+              background: var(--paper); border: var(--hair) solid var(--rule); box-shadow: var(--shadow-card);
+              padding: 18px 24px; }
+  .res-card .who { font-size: 28px; font-weight: 700; color: var(--ink); }
+  .res-card .coef { position: absolute; right: 24px; top: 24px; font-family: var(--font-mono); font-size: 20px; color: var(--ink-2); }
+  .res-card .money { position: absolute; left: 24px; top: 52px; font-size: 44px; color: var(--accent);
+                     font-variant-numeric: tabular-nums; }
+
+  .caption { position: absolute; left: 120px; bottom: 96px; font-size: 40px; color: var(--ink-2); max-width: 760px; white-space: nowrap; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="cam">
+    <div id="unwind" class="mono"><span id="unwind-t"></span><span class="caret" id="caret"></span></div>
+
+    <svg id="g" viewBox="0 0 1920 1080">
+      <!-- database cylinder (wireframe) -->
+      <g id="cyl">
+        <ellipse id="cyl-ring1" class="wire-soft" cx="440" cy="455" rx="210" ry="44"/>
+        <ellipse id="cyl-ring2" class="wire-soft" cx="440" cy="580" rx="210" ry="44"/>
+        <path id="cyl-left" class="wire" d="M230 330 L230 700"/>
+        <path id="cyl-right" class="wire" d="M650 330 L650 700"/>
+        <path id="cyl-bottom" class="wire" d="M230 700 A210 44 0 0 0 650 700"/>
+        <ellipse id="cyl-top" class="wire" cx="440" cy="330" rx="210" ry="44"/>
+      </g>
+
+      <!-- contagion graph -->
+      <g id="edges">
+        <path id="e5m" class="edge" d="M1524 288 L1676 402"/>
+        <path id="e5h" class="edge-hot" d="M1524 288 L1676 402" style="opacity:.55"/>
+        <path id="e1" class="edge-hot" d="M960 270 L1090 270"/>
+        <path id="e2" class="edge-hot" d="M1150 270 L1280 270"/>
+        <path id="e3" class="edge-hot" d="M1340 270 L1470 270"/>
+        <path id="e4" class="edge-hot" d="M1530 270 L1670 270"/>
+        <polygon id="a1" class="arrow-hot" points="1090,270 1076,262 1076,278"/>
+        <polygon id="a2" class="arrow-hot" points="1280,270 1266,262 1266,278"/>
+        <polygon id="a3" class="arrow-hot" points="1470,270 1456,262 1456,278"/>
+        <polygon id="a4" class="arrow-hot" points="1670,270 1656,262 1656,278"/>
+        <polygon id="a5" class="arrow-mute" points="1676,402 1660,399 1669,387"/>
+      </g>
+      <path id="flow" d="M930 270 L1700 270" fill="none" stroke="none"/>
+      <g id="particles">
+        <circle class="particle" r="7" id="p0"/><circle class="particle" r="7" id="p1"/><circle class="particle" r="7" id="p2"/>
+      </g>
+      <g id="nodes"></g>
+      <g id="pills"></g>
+
+      <!-- lineage -->
+      <g id="lineage">
+        <path id="l1" class="lin-line" d="M1040 870 L1104 870"/>
+        <path id="l2" class="lin-line" d="M1336 870 L1394 870"/>
+        <path id="l3" class="lin-dash" d="M1220 888 L1220 914"/>
+        <path id="l4" class="lin-dash" d="M1510 888 L1510 914"/>
+        <path id="l5" class="lin-line" d="M1258 932 L1472 932"/>
+        <polygon id="la1" class="arrow-mute" points="1104,870 1094,864 1094,876"/>
+        <polygon id="la2" class="arrow-mute" points="1394,870 1384,864 1384,876"/>
+        <polygon id="la5" class="arrow-mute" points="1472,932 1462,926 1462,938"/>
+        <text id="l5t" class="lin-label" x="1365" y="922">EVOLVED_INTO</text>
+      </g>
+      <g id="linpills"></g>
+    </svg>
+
+    <div id="cards"></div>
+    <div id="dbname" class="display">Neo4j Aura</div>
+    <div id="dbcounts"><span><b id="cn">0</b> nodes</span><span><b id="cr">0</b> relationships</span></div>
+
+    <div id="eq" class="display">
+      <span class="f" id="f0">0.98</span><span class="x f" id="x0">×</span><span class="f" id="f1">0.95</span><span class="x f" id="x1">×</span><span class="f" id="f2">0.92</span><span class="x f" id="x2">×</span><span class="f" id="f3">1.00</span><span class="x f" id="xe">=</span><span class="f res" id="fr">0.0000</span>
+    </div>
+
+    <div id="cy"><div id="cy1"></div><div id="cy2"></div></div>
+
+    <div class="res-card" id="rc0" style="left:860px">
+      <div class="who">NVIDIA</div><div class="coef">contagion 0.8565</div><div class="money display" id="m0">$0</div>
+    </div>
+    <div class="res-card" id="rc1" style="left:1350px">
+      <div class="who">Apple</div><div class="coef">contagion 0.7537</div><div class="money display" id="m1">$0</div>
+    </div>
+  </div>
+
+  <div class="caption" id="cap1">Only verified rows are committed.</div>
+  <div class="caption" id="cap2">Multi-hop contagion, computed in Cypher.</div>
+  <div class="caption" id="cap3">Every evolution step is stored as lineage.</div>
+</div>
+<script src="../scene_kit.js"></script>
+<script>
+  window.SCENE = { duration: 10, still: 8.5, title: "Neo4j: verified commit and multi-hop contagion" };
+  const SVGNS = "http://www.w3.org/2000/svg";
+  const mk = (tag, attrs, parent) => { const el = document.createElementNS(SVGNS, tag);
+    for (const k in attrs) el.setAttribute(k, attrs[k]); if (parent) parent.appendChild(el); return el; };
+
+  // cleaned entities landing in the DB
+  const CARDS = [
+    { nm: "Quartz", tier: "--node-t4" }, { nm: "Zeiss", tier: "--node-t3" },
+    { nm: "ASML", tier: "--node-t2" },   { nm: "TSMC", tier: "--node-t1" },
+    { nm: "NVIDIA", tier: "--node-holding" }, { nm: "Apple", tier: "--node-holding" },
+  ];
+  const slots = [[252, 588], [452, 588], [252, 500], [452, 500], [252, 412], [452, 412]];
+  const cardsEl = document.getElementById("cards");
+  CARDS.forEach((c, i) => {
+    const d = document.createElement("div"); d.className = "card"; d.id = "c" + i;
+    d.innerHTML = `<span class="bar" style="background:var(${c.tier})"></span><span class="nm">${c.nm}</span><span class="tag">MERGE</span>`;
+    cardsEl.appendChild(d);
+  });
+
+  // graph nodes
+  const NODES = [
+    { x: 930, y: 270, nm: "Quartz", tier: "--node-t4" }, { x: 1120, y: 270, nm: "Zeiss", tier: "--node-t3" },
+    { x: 1310, y: 270, nm: "ASML", tier: "--node-t2" },  { x: 1500, y: 270, nm: "TSMC", tier: "--node-t1" },
+    { x: 1700, y: 270, nm: "NVIDIA", tier: "--node-holding" }, { x: 1700, y: 420, nm: "Apple", tier: "--node-holding" },
+  ];
+  const nodesG = document.getElementById("nodes");
+  const nodeEls = NODES.map((n, i) => {
+    const g = mk("g", { id: "n" + i }, nodesG);
+    mk("circle", { class: "node-c", cx: 0, cy: 0, r: 30, style: `stroke:var(${n.tier})` }, g);
+    mk("circle", { cx: 0, cy: 0, r: 10, style: `fill:var(${n.tier})` }, g);
+    const tx = mk("text", { class: "node-label", x: i === 5 ? 62 : 0, y: i === 5 ? 8 : 58 }, g);
+    if (i === 5) tx.setAttribute("style", "text-anchor:start");
+    tx.textContent = n.nm;
+    return g;
+  });
+
+  // weight pills on edges
+  const PILLS = [
+    { x: 1025, y: 232, v: "0.98" }, { x: 1215, y: 232, v: "0.95" }, { x: 1405, y: 232, v: "0.92" },
+    { x: 1600, y: 232, v: "1.00" }, { x: 1580, y: 374, v: "0.88", mute: true },
+  ];
+  const pillsG = document.getElementById("pills");
+  const pillEls = PILLS.map((p) => {
+    const g = mk("g", {}, pillsG);
+    mk("rect", { class: p.mute ? "pill-r-mute" : "pill-r", x: -36, y: -18, width: 72, height: 36, rx: 18 }, g);
+    const tx = mk("text", { class: p.mute ? "pill-t-mute" : "pill-t", x: 0, y: 1 }, g); tx.textContent = p.v;
+    return g;
+  });
+
+  // lineage pills
+  const LIN = [
+    { x: 970, y: 870, w: 140, t: "EvoRun", kind: "n" },
+    { x: 1220, y: 870, w: 232, t: "Epoch 1, failed", kind: "f" },
+    { x: 1510, y: 870, w: 232, t: "Epoch 2, passed", kind: "o" },
+    { x: 1220, y: 932, w: 76, t: "v1", kind: "n" },
+    { x: 1510, y: 932, w: 76, t: "v2", kind: "o" },
+  ];
+  const linG = document.getElementById("linpills");
+  const linEls = LIN.map((p) => {
+    const g = mk("g", {}, linG);
+    const fill = p.kind === "f" ? "var(--fail-soft)" : p.kind === "o" ? "var(--ok-soft)" : "var(--paper-2)";
+    const stroke = p.kind === "f" ? "var(--fail)" : p.kind === "o" ? "var(--ok)" : "var(--rule)";
+    const ink = p.kind === "f" ? "var(--fail)" : p.kind === "o" ? "var(--ok)" : "var(--ink)";
+    mk("rect", { x: -p.w / 2, y: -18, width: p.w, height: 36, rx: 18, style: `fill:${fill};stroke:${stroke};stroke-width:1.5` }, g);
+    const tx = mk("text", { x: 0, y: 1, style: `font-family:var(--font-body);font-size:19px;fill:${ink};text-anchor:middle;dominant-baseline:central` }, g);
+    tx.textContent = p.t;
+    return g;
+  });
+
+  const UNWIND = "UNWIND $rows AS row MERGE (e:Entity {id: row.id})";
+  const CY1 = "MATCH p=(r:Tier4_RawMaterial)-[*]->(h:Portfolio_Holding)";
+  const CY2 = "RETURN reduce(c = 1.0, x IN relationships(p) | c * x.weight)";
+  const hl = (s) => s.replace(/^(MATCH|RETURN)/, '<span class="kw">$1</span>')
+                      .replace(/ (IN) /, ' <span class="kw">$1</span> ');
+
+  const pop = (g, x, y, t, start, dur = 0.45) => {
+    const p = K.prog(t, start, dur);
+    const s = p <= 0 ? 0.001 : K.ease.outBack(p);
+    g.setAttribute("transform", `translate(${x} ${y}) scale(${Math.max(0.001, s)})`);
+    g.style.opacity = String(K.ep(t, start, dur * 0.6));
+  };
+
+  window.render = (t) => {
+    // gentle camera push
+    const c = K.ep(t, 0, 10, "inOutCubic");
+    K.$("#cam").style.transform = `translate(${-6 * c}px, ${-4 * c}px) scale(${1 + 0.03 * c})`;
+
+    // typed UNWIND line, then dims
+    const typed = K.type(UNWIND, t, 0.15, 42);
+    K.$("#unwind-t").textContent = typed;
+    const blink = typed.length < UNWIND.length ? 1 : (Math.floor(t * 2) % 2 === 0 ? 1 : 0);
+    K.$("#caret").style.opacity = String(t < 3.2 ? blink : 0);
+    K.$("#unwind").style.color = t > 3 ? "var(--ink-2)" : "var(--ink)";
+    K.$("#unwind").style.opacity = String(1 - 0.35 * K.ep(t, 3, 0.6));
+
+    // cylinder draw-on
+    K.draw(K.$("#cyl-top"), K.ep(t, 0.0, 0.8, "inOutCubic"));
+    K.draw(K.$("#cyl-left"), K.ep(t, 0.2, 0.6));
+    K.draw(K.$("#cyl-right"), K.ep(t, 0.2, 0.6));
+    K.draw(K.$("#cyl-bottom"), K.ep(t, 0.5, 0.6, "inOutCubic"));
+    K.draw(K.$("#cyl-ring1"), K.ep(t, 0.6, 0.7, "inOutCubic"));
+    K.draw(K.$("#cyl-ring2"), K.ep(t, 0.75, 0.7, "inOutCubic"));
+
+    // cards fall into slots
+    let landed = 0;
+    CARDS.forEach((cd, i) => {
+      const s = 0.5 + 0.28 * i, dur = 0.75;
+      const p = K.prog(t, s, dur);
+      const [sx, sy] = slots[i];
+      const y = K.lerp(150, sy, p <= 0 ? 0 : K.ease.outBack(p));
+      const el = K.$("#c" + i);
+      el.style.left = sx + "px"; el.style.top = y + "px";
+      el.style.opacity = String(K.ep(t, s, 0.25));
+      el.style.transform = `rotate(${(1 - K.ep(t, s, dur)) * (i % 2 ? 4 : -4)}deg)`;
+      el.querySelector(".tag").style.opacity = String(K.ep(t, s + 0.55, 0.3));
+      if (t >= s + dur * 0.85) landed++;
+    });
+    K.$("#cn").textContent = String(landed);
+    K.$("#cr").textContent = String(Math.round(K.count(5, t, 2.3, 0.9, 0, "outCubic")));
+    K.css(K.$("#dbname"), K.enter(t, 0.3, 0.6, 16));
+    K.css(K.$("#dbcounts"), K.enter(t, 0.6, 0.6, 16));
+
+    // graph nodes appear
+    NODES.forEach((n, i) => pop(nodeEls[i], n.x, n.y, t, 2.6 + 0.08 * i, 0.5));
+    // highlighted path draws segment by segment
+    for (let i = 0; i < 4; i++) {
+      const s = 3.0 + 0.5 * i;
+      K.draw(K.$("#e" + (i + 1)), K.ep(t, s, 0.5, "inOutCubic"));
+      K.$("#a" + (i + 1)).style.opacity = String(K.ep(t, s + 0.42, 0.12));
+      pop(pillEls[i], PILLS[i].x, PILLS[i].y, t, s + 0.45, 0.45);
+      K.$("#f" + i).style.opacity = String(K.ep(t, s + 0.45, 0.35));
+      K.$("#f" + i).style.transform = `translateY(${(1 - K.ep(t, s + 0.45, 0.35)) * 14}px)`;
+      if (i < 3) { K.$("#x" + i).style.opacity = String(K.ep(t, s + 0.7, 0.3)); }
+    }
+    // muted Apple branch, warms at 7s
+    K.draw(K.$("#e5m"), K.ep(t, 3.0, 0.6, "inOutCubic"));
+    K.$("#a5").style.opacity = String(K.ep(t, 3.5, 0.15));
+    K.draw(K.$("#e5h"), K.ep(t, 7.0, 0.5, "inOutCubic"));
+    pop(pillEls[4], PILLS[4].x, PILLS[4].y, t, 7.2, 0.45);
+
+    // equation result rolls
+    K.$("#xe").style.opacity = String(K.ep(t, 5.0, 0.3));
+    K.$("#fr").style.opacity = String(K.ep(t, 5.05, 0.3));
+    K.$("#fr").textContent = K.count(0.85652, t, 5.1, 1.0, 0, "outExpo").toFixed(4);
+
+    // particles flow along the hot path
+    for (let k = 0; k < 3; k++) {
+      const el = K.$("#p" + k);
+      if (t < 5.0) { el.style.opacity = "0"; continue; }
+      const p = ((t - 5.0) * 0.38 + k / 3) % 1;
+      const pt = K.along(K.$("#flow"), p);
+      el.setAttribute("cx", pt.x); el.setAttribute("cy", pt.y);
+      el.style.opacity = String(K.ep(t, 5.0, 0.4) * Math.sin(Math.PI * p) * 0.9);
+    }
+
+    // Cypher panel types in
+    K.css(K.$("#cy"), K.enter(t, 3.1, 0.5, 14));
+    K.$("#cy1").innerHTML = hl(K.type(CY1, t, 3.3, 46));
+    K.$("#cy2").innerHTML = hl(K.type(CY2, t, 4.6, 46));
+
+    // results
+    K.css(K.$("#rc0"), K.enter(t, 7.0, 0.6, 22));
+    K.css(K.$("#rc1"), K.enter(t, 7.3, 0.6, 22));
+    K.$("#m0").textContent = K.money(K.count(10706500, t, 7.15, 1.0));
+    K.$("#m1").textContent = K.money(K.count(7386628, t, 7.45, 0.9));
+
+    // lineage
+    LIN.forEach((p, i) => pop(linEls[i], p.x, p.y, t, 7.25 + 0.14 * i, 0.4));
+    K.draw(K.$("#l1"), K.ep(t, 7.45, 0.3)); K.$("#la1").style.opacity = String(K.ep(t, 7.7, 0.1));
+    K.draw(K.$("#l2"), K.ep(t, 7.6, 0.3));  K.$("#la2").style.opacity = String(K.ep(t, 7.85, 0.1));
+    K.draw(K.$("#l3"), K.ep(t, 7.7, 0.25));
+    K.draw(K.$("#l4"), K.ep(t, 7.85, 0.25));
+    K.draw(K.$("#l5"), K.ep(t, 7.95, 0.35)); K.$("#la5").style.opacity = String(K.ep(t, 8.25, 0.1));
+    K.$("#l5t").style.opacity = String(K.ep(t, 8.05, 0.3));
+    // keep dash pattern on dashed connectors once drawn
+    ["#l3", "#l4"].forEach((s) => { if (t >= 8.2) { K.$(s).style.strokeDasharray = "4 5"; K.$(s).style.strokeDashoffset = "0"; } });
+
+    // captions
+    K.css(K.$("#cap1"), K.enter(t, 1.0, 0.6, 12, 3.5, 0.4));
+    K.css(K.$("#cap2"), K.enter(t, 4.0, 0.6, 12, 7.5, 0.4));
+    K.css(K.$("#cap3"), K.enter(t, 7.95, 0.5, 12));
+  };
+</script>
+</body>
+</html>

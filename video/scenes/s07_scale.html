@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scale and evidence</title>
+<link rel="stylesheet" href="../../brand/tokens.css">
+<style>
+  html, body { margin: 0; background: var(--paper); overflow-x: clip; }
+  #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden;
+           background: var(--paper); color: var(--ink); font-family: var(--font-body); }
+  #cam { position: absolute; inset: 0; transform-origin: 960px 520px; }
+  .abs { position: absolute; }
+  .display { font-family: var(--font-display); font-weight: var(--display-weight); letter-spacing: var(--tracking-display); }
+  .mono { font-family: var(--font-mono); }
+  .h2 { font-size: 52px; line-height: 1.1; color: var(--ink); white-space: nowrap; }
+  .label { font-size: 30px; color: var(--ink-2); white-space: nowrap; }
+  .small { font-size: 24px; color: var(--muted); white-space: nowrap; }
+  svg.layer { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: visible; }
+  .wire { fill: none; stroke: var(--rule); stroke-width: 1.5; }
+  .divider { stroke: var(--rule); stroke-width: 1.5; }
+  .particle { fill: var(--ink); }
+  .src { fill: var(--ink); }
+  .src-ring { fill: none; stroke: var(--ink-2); stroke-width: 1.5; }
+
+  .card { position: absolute; width: 240px; height: 180px; box-sizing: border-box;
+          border: var(--hair) solid var(--rule); border-radius: var(--radius); background: var(--paper);
+          box-shadow: var(--shadow-card);
+          padding: 16px 20px; transform-origin: 50% 60%; }
+  .cov { position: absolute; inset: -1.5px; border-radius: var(--radius); border: 1.5px solid var(--rule);
+         background: var(--paper); opacity: 0; }
+  .cov.fail { border-color: var(--fail); background: var(--fail-soft); }
+  .cov.warn { border-color: var(--muted); background: var(--paper-3); }
+  .cov.ok { border-color: var(--ok); background: var(--ok-soft); }
+  .cov.isbest { border-width: 3px; inset: -3px; }
+  .card .id { position: relative; z-index: 1; font-size: 20px; color: var(--muted); }
+  .card .name { position: relative; z-index: 1; font-size: 30px; color: var(--ink); margin-top: 4px; }
+  .track { position: absolute; z-index: 1; left: 20px; right: 20px; top: 96px; height: 8px;
+           border-radius: 4px; background: var(--paper-2); overflow: hidden; }
+  .fill, .fill2 { position: absolute; left: 0; top: 0; height: 100%; width: 0; border-radius: 4px; }
+  .fill { background: var(--ink-2); }
+  .fill2 { opacity: 0; }
+  .fill2.fail { background: var(--fail); } .fill2.warn { background: var(--muted); } .fill2.ok { background: var(--ok); }
+  .rw { position: absolute; z-index: 1; left: 20px; right: 20px; bottom: 12px;
+        display: flex; align-items: baseline; justify-content: space-between; }
+  .rw .k { font-size: 20px; color: var(--muted); }
+  .rw .v { font-size: 42px; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .best-tag { position: absolute; z-index: 2; right: 12px; top: 12px; font-size: 19px; padding: 3px 12px;
+          border-radius: 999px; background: var(--ok); color: var(--paper); opacity: 0; }
+
+  .bar-track { position: absolute; height: 24px; border-radius: 6px; background: var(--paper-2); }
+  .bar { position: absolute; height: 24px; border-radius: 6px; width: 0; }
+  .bar.par { background: var(--ok); }
+  .bar.ser { background: var(--muted); }
+  .ctr { position: absolute; font-size: 28px; color: var(--ink); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .faster { font-size: 48px; color: var(--ink); white-space: nowrap; transform-origin: 0 60%; }
+
+  .sq { position: absolute; width: 104px; height: 104px; box-sizing: border-box; border-radius: var(--radius);
+        border: 1.5px solid var(--rule); background: var(--paper-2); }
+  .sq .ov { position: absolute; inset: -1.5px; border-radius: var(--radius); opacity: 0; }
+  .sq .ov.fail { border: 1.5px solid var(--fail); background: var(--fail-soft); }
+  .sq .ov.ok { border: 1.5px solid var(--ok); background: var(--ok-soft); }
+  .sq svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .sq path { fill: none; stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; }
+  .sq path.x { stroke: var(--fail); } .sq path.c { stroke: var(--ok); }
+  .count { font-size: 76px; line-height: 1; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .count.fail { color: var(--fail); } .count.ok { color: var(--ok); }
+  .caption { position: absolute; left: 120px; bottom: 96px; font-size: 40px; color: var(--ink-2); max-width: 1500px; white-space: nowrap; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="cam">
+    <svg class="layer" id="wires" viewBox="0 0 1920 1080">
+      <line class="divider" id="div" x1="980" y1="104" x2="980" y2="880"/>
+      <g id="wireG"></g>
+      <g id="partG"></g>
+      <circle class="src-ring" id="srcRing" cx="504" cy="215" r="14"/>
+      <circle class="src" id="src" cx="504" cy="215" r="11"/>
+    </svg>
+
+    <div class="abs display h2" id="tL" style="left:120px;top:96px">Daytona fan-out</div>
+    <div class="abs mono small" id="srcLbl" style="left:534px;top:200px">6 candidates</div>
+    <div id="cards"></div>
+
+    <div class="abs label" id="lPar" style="left:120px;top:774px">parallel</div>
+    <div class="abs label" id="lSer" style="left:120px;top:834px">serial</div>
+    <div class="bar-track" id="tkPar" style="left:290px;top:780px;width:520px"></div>
+    <div class="bar-track" id="tkSer" style="left:290px;top:840px;width:520px"></div>
+    <div class="bar par" id="bPar" style="left:290px;top:780px"></div>
+    <div class="bar ser" id="bSer" style="left:290px;top:840px"></div>
+    <div class="ctr mono" id="cPar" style="top:774px">0.0 s</div>
+    <div class="ctr mono" id="cSer" style="top:834px">0.0 s</div>
+    <div class="abs display faster" id="faster" style="left:120px;top:700px">4.3× faster</div>
+
+    <div class="abs display h2" id="tR" style="left:1040px;top:96px">Prompt lab, 5 runs each</div>
+    <div class="abs label" id="lNaive" style="left:1040px;top:236px">Naive prompt</div>
+    <div class="abs label" id="lEvo" style="left:1040px;top:456px">Evolved prompt</div>
+    <div id="squares"></div>
+    <div class="abs display count fail" id="nCount" style="left:1676px;top:304px">0/5</div>
+    <div class="abs display count ok" id="eCount" style="left:1676px;top:524px">0/5</div>
+    <div class="abs small" id="nPassed" style="left:1680px;top:388px">passed</div>
+    <div class="abs small" id="ePassed" style="left:1680px;top:608px">passed</div>
+    <div class="abs mono small" id="note" style="left:1040px;top:672px">Nosana qwen3.8:27b, real Daytona</div>
+  </div>
+  <div class="caption" id="cap1">Six offline sandboxes in parallel.</div>
+  <div class="caption" id="cap2">Measured: 0 of 5 before, 5 of 5 after.</div>
+</div>
+<script src="../scene_kit.js"></script>
+<script>
+  window.SCENE = { duration: 9, still: 8.3, title: "Scale and evidence" };
+
+  // ---- data (measured) ----
+  const CARDS = [
+    { id: 1, name: "naive",   rw: 0.0,   cls: "fail", col: 0, row: 0 },
+    { id: 2, name: "partial", rw: 0.733, cls: "warn", col: 1, row: 0 },
+    { id: 3, name: "robust",  rw: 1.0,   cls: "ok",   col: 2, row: 0, best: true },
+    { id: 4, name: "naive",   rw: 0.0,   cls: "fail", col: 0, row: 1 },
+    { id: 5, name: "partial", rw: 0.733, cls: "warn", col: 1, row: 1 },
+    { id: 6, name: "robust",  rw: 1.0,   cls: "ok",   col: 2, row: 1 },
+  ];
+  const PAR = 4.9, SER = 21.0, BAR_MAX = 520;
+  const SRC = { x: 504, y: 215 };
+  const NS = "http://www.w3.org/2000/svg";
+
+  // ---- build DOM once (deterministic) ----
+  const cardsEl = document.getElementById("cards");
+  const wireG = document.getElementById("wireG"), partG = document.getElementById("partG");
+  CARDS.forEach((c, i) => {
+    c.x = 120 + c.col * 264; c.y = 290 + c.row * 204;
+    const d = document.createElement("div");
+    d.className = "card"; d.style.left = c.x + "px"; d.style.top = c.y + "px";
+    d.innerHTML = `<div class="cov ${c.cls}${c.best ? " isbest" : ""}"></div>
+      <div class="id mono">sandbox ${c.id}</div><div class="name">${c.name}</div>
+      <div class="track"><div class="fill"></div><div class="fill2 ${c.cls}"></div></div>
+      <div class="rw"><span class="k">reward</span><span class="v display">0.0</span></div>
+      ${c.best ? '<div class="best-tag">best</div>' : ""}`;
+    cardsEl.appendChild(d); c.el = d;
+    // wire from source to card top-centre
+    const p = document.createElementNS(NS, "path");
+    const ex = c.x + 120, ey = c.y + 6, my = (SRC.y + ey) / 2;
+    p.setAttribute("d", `M${SRC.x},${SRC.y} C${SRC.x},${my} ${ex},${my} ${ex},${ey}`);
+    p.setAttribute("class", "wire"); wireG.appendChild(p); c.wire = p;
+    c.parts = [0, 1, 2].map(() => { const q = document.createElementNS(NS, "circle");
+      q.setAttribute("r", "6"); q.setAttribute("class", "particle"); partG.appendChild(q); return q; });
+  });
+
+  const sqEl = document.getElementById("squares");
+  const SQ = [];
+  [["fail", 290, "x"], ["ok", 510, "c"]].forEach(([cls, top, kind], r) => {
+    for (let i = 0; i < 5; i++) {
+      const s = document.createElement("div");
+      s.className = "sq"; s.style.left = 1040 + i * 124 + "px"; s.style.top = top + "px";
+      const path = kind === "x" ? "M36 36 L68 68 M68 36 L36 68" : "M30 54 L46 70 L76 36";
+      s.innerHTML = `<div class="ov ${cls}"></div><svg viewBox="0 0 104 104"><path class="${kind}" d="${path}"/></svg>`;
+      sqEl.appendChild(s);
+      SQ.push({ el: s, row: r, i, ov: s.querySelector(".ov"), path: s.querySelector("path"),
+                ta: r === 0 ? 2.5 + 0.38 * i : 4.35 + 0.15 * i });
+    }
+  });
+
+  const $ = (id) => document.getElementById(id);
+  const pop = (t, start, dur = 0.5, from = 0.86) => {
+    const p = K.prog(t, start, dur);
+    return { opacity: String(K.ep(t, start, dur * 0.6)), scale: K.lerp(from, 1, K.ease.outBack(p)) };
+  };
+
+  window.render = (t) => {
+    // camera: slow push-in
+    const cz = K.ep(t, 0, 9, "inOutCubic");
+    $("cam").style.transform = `translateY(${-8 * cz}px) scale(${1 + 0.03 * cz})`;
+
+    // ---- left: fan-out ----
+    K.css($("tL"), K.enter(t, 0.15, 0.6));
+    K.draw($("div"), K.ep(t, 0.3, 1.0, "inOutCubic"));
+    const sp = pop(t, 0.4, 0.5, 0.2);
+    ["src", "srcRing"].forEach((id) => { $(id).style.opacity = sp.opacity;
+      $(id).style.transformOrigin = "504px 215px"; $(id).style.transform = `scale(${sp.scale})`; });
+    // ring breathes while dispatching
+    const ring = K.prog(t, 0.7, 1.2);
+    $("srcRing").setAttribute("r", String(14 + 22 * ring));
+    $("srcRing").style.opacity = String(ring > 0 && ring < 1 ? 1 - ring : 0);
+    K.css($("srcLbl"), K.enter(t, 0.5, 0.5, 12));
+
+    CARDS.forEach((c, i) => {
+      K.draw(c.wire, K.ep(t, 0.55 + i * 0.03, 0.6, "inOutCubic"));
+      c.parts.forEach((q, j) => {
+        const p = K.prog(t, 0.7 + j * 0.14 + i * 0.02, 0.65);
+        const pt = K.along(c.wire, K.ease.inOutCubic(p));
+        q.setAttribute("cx", pt.x); q.setAttribute("cy", pt.y);
+        q.style.opacity = String(p > 0 && p < 1 ? Math.sin(Math.PI * p) : 0);
+      });
+      const cp = pop(t, 0.9 + i * 0.04, 0.55);
+      c.el.style.opacity = cp.opacity; c.el.style.transform = `scale(${cp.scale})`;
+      const fill = K.ep(t, 1.5, 1.9, "inOutCubic");
+      c.el.querySelector(".fill").style.width = fill * 100 + "%";
+      const res = K.ep(t, 3.4, 0.4);
+      c.el.querySelector(".fill2").style.width = "100%";
+      c.el.querySelector(".fill2").style.opacity = String(res);
+      c.el.querySelector(".cov").style.opacity = String(res);
+      const v = K.count(c.rw, t, 3.45, 0.6);
+      c.el.querySelector(".v").textContent = t < 3.45 ? "–" : (c.rw === 0.733 ? v.toFixed(3) : v.toFixed(1));
+      if (c.best) { const b = pop(t, 4.1, 0.45, 0.6); const be = c.el.querySelector(".best-tag");
+        be.style.opacity = b.opacity; be.style.transform = `scale(${b.scale})`; }
+    });
+
+    // time bars: same clock for both, so widths stay proportional to measured seconds
+    ["lPar", "lSer"].forEach((id, k) => K.css($(id), K.enter(t, 4.2 + k * 0.08, 0.5, 12)));
+    ["tkPar", "tkSer"].forEach((id, k) => { $(id).style.opacity = String(K.ep(t, 4.2 + k * 0.08, 0.5)); });
+    const clock = SER * K.prog(t, 4.45, 1.8); // seconds elapsed on the shared clock
+    const par = Math.min(PAR, clock), ser = clock;
+    $("bPar").style.width = (BAR_MAX * par) / SER + "px";
+    $("bSer").style.width = (BAR_MAX * ser) / SER + "px";
+    const ctrIn = String(K.ep(t, 4.45, 0.3));
+    $("cPar").style.opacity = ctrIn; $("cSer").style.opacity = ctrIn;
+    $("cPar").textContent = par.toFixed(1) + " s";
+    $("cSer").textContent = ser.toFixed(1) + " s";
+    $("cPar").style.left = 290 + (BAR_MAX * par) / SER + 16 + "px";
+    $("cSer").style.left = 290 + (BAR_MAX * ser) / SER + 16 + "px";
+    const fp = pop(t, 6.3, 0.55, 0.7);
+    $("faster").style.opacity = fp.opacity; $("faster").style.transform = `scale(${fp.scale})`;
+
+    // ---- right: prompt lab ----
+    K.css($("tR"), K.enter(t, 1.8, 0.6));
+    K.css($("lNaive"), K.enter(t, 2.0, 0.5, 12));
+    K.css($("lEvo"), K.enter(t, 2.1, 0.5, 12));
+    let evoPassed = 0;
+    SQ.forEach((s) => {
+      s.el.style.opacity = String(K.ep(t, 2.05 + s.row * 0.1 + s.i * 0.05, 0.4));
+      const a = K.prog(t, s.ta, 0.35);
+      const bump = 1 + 0.08 * Math.sin(Math.PI * a);
+      s.el.style.transform = `scale(${bump})`;
+      s.ov.style.opacity = String(K.ease.outCubic(a));
+      K.draw(s.path, K.ep(t, s.ta + 0.08, 0.3));
+      if (s.row === 1 && t >= s.ta + 0.15) evoPassed++;
+    });
+    K.css($("nCount"), K.enter(t, 4.35, 0.5, 14));
+    K.css($("nPassed"), K.enter(t, 4.45, 0.5, 10));
+    K.css($("eCount"), K.enter(t, 4.35, 0.5, 14));
+    K.css($("ePassed"), K.enter(t, 4.45, 0.5, 10));
+    $("eCount").textContent = evoPassed + "/5";
+    K.css($("note"), K.enter(t, 6.9, 0.6, 10));
+
+    // captions
+    K.css($("cap1"), K.enter(t, 1.0, 0.6, 16, 4.5, 0.4));
+    K.css($("cap2"), K.enter(t, 5.0, 0.6, 16));
+  };
+</script>
+</body>
+</html>

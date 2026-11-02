@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="The EvoGraph-Quant launch film: a self-evolving ETL agent that learns from Daytona sandbox crashes on Nosana GPUs, so only verified data reaches the Neo4j risk graph.">
+<title>EvoGraph-Quant launch film</title>
+<link rel="stylesheet" href="../brand/tokens.css">
+<style>
+/* Hallmark · theme: ink (from brand/tokens.css) · ink: paper · genre: editorial · surface: video player page · signature: the film itself, full width · v2.0.0 */
+/* Hallmark · pre-emit critique: P4 H4 E4 S4 R4 V4 · weakest: S, a player page is mostly the film; the scene strip doubles as chapter navigation */
+html, body { overflow-x: clip; }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--font-body); line-height: 1.5; }
+main { max-width: 1240px; margin: 0 auto; padding: 56px 24px 72px; }
+h1 { font-family: var(--font-display); font-weight: var(--display-weight, 700); letter-spacing: var(--tracking-display, -0.03em);
+     font-size: clamp(2rem, 4.2vw, 3.4rem); line-height: 1.05; margin: 0 0 12px; text-wrap: balance; overflow-wrap: break-word; min-width: 0; }
+.lede { font-size: 1.15rem; color: var(--ink-2); max-width: 46ch; margin: 0 0 32px; }
+video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; background: var(--paper-2);
+        border: var(--hair) solid var(--rule); border-radius: var(--radius); }
+.meta { display: flex; flex-wrap: wrap; gap: 8px 24px; margin: 16px 0 0; color: var(--muted); font-size: 0.95rem; }
+.meta a { color: var(--ink); text-underline-offset: 3px; }
+h2 { text-wrap: balance; font-family: var(--font-display); font-weight: 600; font-size: 1.35rem; margin: 56px 0 16px; }
+ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 20px; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+li button { all: unset; box-sizing: border-box; display: grid; gap: 4px; width: 100%; cursor: pointer; }
+li img { display: block; width: 100%; height: auto; border: var(--hair) solid var(--rule); border-radius: calc(var(--radius) - 4px);
+         background: var(--paper-2); margin-bottom: 8px; }
+li .n { color: var(--muted); font-size: 0.9rem; }
+li .t { font-weight: 600; }
+li .d { color: var(--muted); font-size: 0.9rem; font-family: var(--font-mono); }
+li button:hover .t { text-decoration: underline; text-underline-offset: 3px; }
+li button:active img { border-color: var(--ink-2); }
+li button:disabled { cursor: default; opacity: 0.6; }
+::selection { background: var(--ok-soft); color: var(--ink); }
+html { scrollbar-color: var(--rule) var(--paper); }
+:focus-visible { outline: 2px solid var(--ok); outline-offset: 3px; transition: none; }
+li button:focus-visible { outline: 2px solid var(--ok); outline-offset: 4px; border-radius: 6px; }
+.note { margin-top: 48px; color: var(--muted); font-size: 0.95rem; max-width: 70ch; }
+@media (max-width: 900px) { ol { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) { main { padding: 32px 16px 56px; } ol { grid-template-columns: minmax(0, 1fr); } }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>EvoGraph-Quant</h1>
+  <p class="lede">A self-evolving ETL agent that learns from sandbox crashes, so only verified data reaches the risk graph.</p>
+  <video id="film" controls playsinline preload="metadata" poster="poster.png">
+    <source src="EvoGraph-Quant_launch_720p.mp4" type="video/mp4">
+    <source src="EvoGraph-Quant_launch.mp4" type="video/mp4">
+    Your browser cannot play this video. <a href="EvoGraph-Quant_launch_720p.mp4">Download the MP4</a>.
+  </video>
+  <p class="meta"><span>88 seconds at 30 fps</span><a href="EvoGraph-Quant_launch_720p.mp4" download>Download 720p</a><a href="EvoGraph-Quant_launch.mp4">1080p master, local build only</a></p>
+  <h2>Scenes</h2>
+  <ol>
+      <li><button type="button" data-t="0"><img src="stills/s01_title.png" alt="Key frame of scene 01, Title" loading="lazy" width="480" height="270"><span class="n">Scene 01</span><span class="t">Title</span><span class="d">5 s</span></button></li>
+      <li><button type="button" data-t="4.60"><img src="stills/s02_problem.png" alt="Key frame of scene 02, The problem: dirty confidential data" loading="lazy" width="480" height="270"><span class="n">Scene 02</span><span class="t">The problem: dirty confidential data</span><span class="d">9 s</span></button></li>
+      <li><button type="button" data-t="13.20"><img src="stills/s03_contagion.png" alt="Key frame of scene 03, Hidden contagion" loading="lazy" width="480" height="270"><span class="n">Scene 03</span><span class="t">Hidden contagion</span><span class="d">9 s</span></button></li>
+      <li><button type="button" data-t="21.80"><img src="stills/s04_loop.png" alt="Key frame of scene 04, The evolution loop" loading="lazy" width="480" height="270"><span class="n">Scene 04</span><span class="t">The evolution loop</span><span class="d">14 s</span></button></li>
+      <li><button type="button" data-t="35.40"><img src="stills/s05_verify.png" alt="Key frame of scene 05, Ground-truth verifier" loading="lazy" width="480" height="270"><span class="n">Scene 05</span><span class="t">Ground-truth verifier</span><span class="d">8 s</span></button></li>
+      <li><button type="button" data-t="43.00"><img src="stills/s06_neo4j.png" alt="Key frame of scene 06, Neo4j: verified commit and multi-hop contagion" loading="lazy" width="480" height="270"><span class="n">Scene 06</span><span class="t">Neo4j: verified commit and multi-hop contagion</span><span class="d">10 s</span></button></li>
+      <li><button type="button" data-t="52.60"><img src="stills/s07_scale.png" alt="Key frame of scene 07, Scale and evidence" loading="lazy" width="480" height="270"><span class="n">Scene 07</span><span class="t">Scale and evidence</span><span class="d">9 s</span></button></li>
+      <li><button type="button" data-t="61.20"><img src="stills/s07b_stack.png" alt="Key frame of scene 08, Built on Daytona, Nosana and Neo4j" loading="lazy" width="480" height="270"><span class="n">Scene 08</span><span class="t">Built on Daytona, Nosana and Neo4j</span><span class="d">12 s</span></button></li>
+      <li><button type="button" data-t="72.80"><img src="stills/real_app.png" alt="Key frame of scene 09, Live product, recorded tonight" loading="lazy" width="480" height="270"><span class="n">Scene 09</span><span class="t">Live product, recorded tonight</span><span class="d">9 s</span></button></li>
+      <li><button type="button" data-t="81.37"><img src="stills/s08_outro.png" alt="Key frame of scene 10, Outro" loading="lazy" width="480" height="270"><span class="n">Scene 10</span><span class="t">Outro</span><span class="d">7 s</span></button></li>
+  </ol>
+  <p class="note">There is no audio track: the film is narrated live during the demo. Every scene is an HTML page rendered frame by frame with headless Chrome and encoded with ffmpeg; the figures shown come from tonight’s measured runs.</p>
+</main>
+<script>
+  // Chapter buttons seek the film; without scripting the list still shows every scene.
+  const film = document.getElementById("film");
+  document.querySelectorAll("li button[data-t]").forEach((b) => b.addEventListener("click", () => {
+    film.currentTime = parseFloat(b.dataset.t); film.play().catch(() => {}); film.focus();
+  }));
+</script>
+</body>
+</html>

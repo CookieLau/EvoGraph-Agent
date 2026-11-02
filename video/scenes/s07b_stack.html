@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Built on Daytona, Nosana and Neo4j</title>
+<link rel="stylesheet" href="../../brand/tokens.css">
+<style>
+  html, body { margin: 0; background: var(--paper); overflow-x: clip; }
+  #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden;
+           background: var(--paper); color: var(--ink); font-family: var(--font-body); }
+  .display { font-family: var(--font-display); font-weight: var(--display-weight, 700); letter-spacing: var(--tracking-display, -0.02em); }
+  .mono { font-family: var(--font-mono); }
+
+  #cam { position: absolute; inset: 0; transform-origin: 960px 540px; }
+  #head { position: absolute; left: 120px; top: 84px; font-size: 40px; color: var(--ink); }
+  #headrule { position: absolute; left: 120px; top: 148px; height: 3px; width: 0; background: var(--ink); border-radius: 2px; }
+
+  /* one sponsor segment */
+  .seg { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; opacity: 0; }
+  .shot { position: absolute; left: 120px; top: 200px; width: 1000px; height: 600px; border-radius: var(--radius, 12px);
+          border: var(--hair, 1px) solid var(--rule); background: var(--paper-2); overflow: hidden;
+          box-shadow: var(--shadow-card, 0 20px 40px color-mix(in srgb, var(--ink) 12%, transparent)); }
+  .shot-inner { position: absolute; inset: 0; transform-origin: 50% 50%; }
+  .shot-inner img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top left; display: none; }
+  .shot-inner img.use { display: block; }
+  .fallback { position: absolute; inset: 0; padding: 56px 60px; box-sizing: border-box; display: none; background: var(--paper-2); }
+  .fallback.use { display: block; }
+  .fb-title { font-family: var(--font-display); font-weight: var(--display-weight, 700); letter-spacing: var(--tracking-display, -0.02em);
+              font-size: 34px; color: var(--ink); margin-bottom: 30px; }
+  .fb-line { font-family: var(--font-mono); font-size: 25px; line-height: 1.75; color: var(--ink-2); white-space: pre; }
+  .fb-line .bad { color: var(--fail); } .fb-line .good { color: var(--ok); } .fb-line .risk { color: var(--accent); }
+
+  .side { position: absolute; left: 1200px; top: 220px; width: 620px; }
+  .logo { height: 96px; display: flex; align-items: center; }
+  .logo img { max-height: 84px; max-width: 420px; object-fit: contain; display: none; }
+  .logo img.use { display: block; }
+  .logo .word { font-family: var(--font-display); font-weight: var(--display-weight, 700); letter-spacing: var(--tracking-display, -0.02em);
+                font-size: 84px; color: var(--ink); line-height: 1; display: none; }
+  .logo .word.use { display: block; }
+  .role { margin-top: 26px; font-size: 34px; color: var(--ink-2); }
+  .srule { margin-top: 34px; height: 2px; width: 0; background: var(--rule); }
+  .code { margin-top: 34px; }
+  .cl { font-family: var(--font-mono); font-size: 23px; line-height: 1.5; color: var(--ink); min-height: 76px;
+        padding: 0 0 0 22px; border-left: 3px solid var(--rule); margin-bottom: 18px; white-space: pre-wrap; word-break: break-word; }
+  .cl.on { border-left-color: var(--ok); }
+  .cursor { display: inline-block; width: 13px; height: 26px; background: var(--ink); vertical-align: -4px; margin-left: 2px; }
+
+  /* final row */
+  #row { position: absolute; inset: 0; opacity: 0; }
+  .mini { position: absolute; top: 250px; width: 500px; }
+  .mshot { width: 500px; height: 300px; border-radius: var(--radius, 12px); border: var(--hair, 1px) solid var(--rule); overflow: hidden;
+           position: relative; background: var(--paper-2);
+           box-shadow: var(--shadow-card, 0 20px 40px color-mix(in srgb, var(--ink) 12%, transparent)); }
+  .mshot img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top left; display: none; }
+  .mshot img.use { display: block; }
+  .mshot .mfb { position: absolute; inset: 0; padding: 30px 32px; box-sizing: border-box; display: none; }
+  .mshot .mfb.use { display: block; }
+  .mfb .fb-line { font-size: 17px; line-height: 1.7; }
+  .mname { margin-top: 30px; height: 64px; display: flex; align-items: center; }
+  .mname img { max-height: 54px; max-width: 300px; object-fit: contain; display: none; }
+  .mname img.use { display: block; }
+  .mname .word { font-family: var(--font-display); font-weight: var(--display-weight, 700); letter-spacing: var(--tracking-display, -0.02em);
+                 font-size: 52px; color: var(--ink); display: none; }
+  .mname .word.use { display: block; }
+  .mrole { margin-top: 12px; font-size: 28px; color: var(--ink-2); }
+  .mstat { margin-top: 14px; font-family: var(--font-mono); font-size: 23px; color: var(--ink); }
+  #loop { position: absolute; inset: 0; pointer-events: none; }
+  .wire { fill: none; stroke: var(--muted); stroke-width: 3; stroke-linecap: round; }
+  .wire.ok { stroke: var(--ok); }
+  .spark { fill: var(--ok); }
+
+  .caption { position: absolute; left: 120px; bottom: 96px; font-size: 40px; color: var(--ink-2); max-width: 1500px; opacity: 0; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="cam">
+    <div id="head" class="display">Built on Daytona, Nosana and Neo4j</div>
+    <div id="headrule"></div>
+
+    <!-- 1 Daytona -->
+    <div class="seg" id="seg0">
+      <div class="shot"><div class="shot-inner" data-shots="daytona">
+        <img alt="EvoGraph-Quant run inside a Daytona sandbox" data-src="../../assets/screens/app_epoch1_fail.png">
+        <img alt="Daytona" data-src="../../assets/screens/public_daytona.png">
+        <img alt="Daytona" data-src="../../assets/screens/public_daytona_home.png">
+        <img alt="Daytona docs" data-src="../../assets/screens/public_daytona_docs.png">
+        <img alt="Daytona docs" data-src="../../assets/screens/public_daytona_network.png">
+        <div class="fallback">
+          <div class="fb-title">Daytona sandbox log, tonight</div>
+          <div class="fb-line">create(network_block_all=True)   <span class="good">0.4 s</span></div>
+          <div class="fb-line">upload_file(payload.json)</div>
+          <div class="fb-line">epoch 1  code_run  <span class="bad">exit 1</span></div>
+          <div class="fb-line"><span class="bad">ValueError: could not convert '1.5M'</span></div>
+          <div class="fb-line">epoch 2  code_run  <span class="good">exit 0, reward 1.0</span></div>
+          <div class="fb-line">fan-out  6 sandboxes  <span class="good">4.9 s</span></div>
+        </div>
+      </div></div>
+      <div class="side">
+        <div class="logo" data-logo="daytona">
+          <img alt="Daytona logo" data-src="../../assets/sponsors/daytona.svg">
+          <img alt="Daytona logo" data-src="../../assets/sponsors/daytona.png">
+          <div class="word">Daytona</div>
+        </div>
+        <div class="role">Offline execution verifier</div>
+        <div class="srule"></div>
+        <div class="code">
+          <div class="cl" data-text="CreateSandboxFromSnapshotParams(&#10;  network_block_all=True)"></div>
+          <div class="cl" data-text="sandbox.process.code_run(script)"></div>
+          <div class="cl" data-text="6 sandboxes in parallel: 4.9 s vs 21.0 s"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2 Nosana -->
+    <div class="seg" id="seg1">
+      <div class="shot"><div class="shot-inner" data-shots="nosana">
+        <img alt="Nosana deployment" data-src="../../assets/screens/user/nosana.png">
+        <img alt="Nosana deployment" data-src="../../assets/screens/user/nosana_dashboard.png">
+        <img alt="Nosana deployment" data-src="../../assets/screens/user/nosana_deployment.png">
+        <img alt="Nosana" data-src="../../assets/screens/public_nosana.png">
+        <img alt="Nosana" data-src="../../assets/screens/public_nosana_home.png">
+        <img alt="Nosana" data-src="../../assets/screens/public_nosana_dashboard.png">
+        <div class="fallback">
+          <div class="fb-title">Nosana GPU node, tonight</div>
+          <div class="fb-line">model    qwen3.8:27b, think off</div>
+          <div class="fb-line">GPU      RTX 5090, 32 GB</div>
+          <div class="fb-line">forward  101 lines, 836 tokens  <span class="good">5.4 s</span></div>
+          <div class="fb-line">backward JSON, 320 tokens  <span class="good">5.1 s</span></div>
+          <div class="fb-line">naive prompt    <span class="bad">0 / 5 passed</span></div>
+          <div class="fb-line">evolved prompt  <span class="good">5 / 5 passed</span></div>
+        </div>
+      </div></div>
+      <div class="side">
+        <div class="logo" data-logo="nosana">
+          <img alt="Nosana logo" data-src="../../assets/sponsors/nosana_on_light.svg">
+          <img alt="Nosana logo" data-src="../../assets/sponsors/nosana.svg">
+          <img alt="Nosana logo" data-src="../../assets/sponsors/nosana.png">
+          <div class="word">Nosana</div>
+        </div>
+        <div class="role">Private GPU inference</div>
+        <div class="srule"></div>
+        <div class="code">
+          <div class="cl" data-text="qwen3.8:27b on RTX 5090"></div>
+          <div class="cl" data-text="forward 5.4 s, backward 5.1 s"></div>
+          <div class="cl" data-text="prompt lab: 0/5 to 5/5"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3 Neo4j -->
+    <div class="seg" id="seg2">
+      <div class="shot"><div class="shot-inner" data-shots="neo4j">
+        <img alt="Neo4j contagion graph" data-src="../../assets/screens/neo4j_contagion_graph.png">
+        <img alt="Neo4j graph" data-src="../../assets/screens/neo4j_graph_render.png">
+        <img alt="EvoGraph-Quant graph" data-src="../../assets/screens/app_graph.png">
+        <div class="fallback" id="neofb">
+          <div class="fb-title">Neo4j Aura, contagion query</div>
+          <svg width="880" height="420" viewBox="0 0 880 420" id="neosvg">
+            <g id="neoedges"></g><g id="neonodes"></g>
+          </svg>
+        </div>
+      </div></div>
+      <div class="side">
+        <div class="logo" data-logo="neo4j">
+          <img alt="Neo4j logo" data-src="../../assets/sponsors/neo4j.svg">
+          <img alt="Neo4j logo" data-src="../../assets/sponsors/neo4j.png">
+          <div class="word">Neo4j</div>
+        </div>
+        <div class="role">Contagion graph and agent memory</div>
+        <div class="srule"></div>
+        <div class="code">
+          <div class="cl" data-text="UNWIND $rows AS row&#10;MERGE (e:Entity {id: row.id})"></div>
+          <div class="cl" data-text="reduce(c = 1.0, x IN relationships(p)&#10;       | c * x.weight)"></div>
+          <div class="cl" data-text="lineage: EvoRun to Epoch to PromptVersion"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- final row: one closed loop -->
+    <div id="row">
+      <svg id="loop" viewBox="0 0 1920 1080" width="1920" height="1080">
+        <path id="lw1" class="wire" d="M 640 400 L 710 400"/>
+        <path id="lw2" class="wire" d="M 1210 400 L 1280 400"/>
+        <path id="lwb" class="wire ok" d="M 1530 770 C 1530 905, 390 905, 390 770"/>
+        <path id="lwbh" class="wire ok" d="M 376 792 L 390 770 L 404 792"/>
+        <g id="lsparks"></g>
+      </svg>
+      <div class="mini" id="m0" style="left:140px">
+        <div class="mshot" data-mini="daytona"><div class="mfb"></div></div>
+        <div class="mname" data-logo="daytona"><div class="word">Daytona</div></div>
+        <div class="mrole">Executes every candidate offline</div>
+        <div class="mstat">0.4 s create, 4.3x fan-out</div>
+      </div>
+      <div class="mini" id="m1" style="left:710px">
+        <div class="mshot" data-mini="nosana"><div class="mfb"></div></div>
+        <div class="mname" data-logo="nosana"><div class="word">Nosana</div></div>
+        <div class="mrole">Writes and rewrites the ETL</div>
+        <div class="mstat">qwen3.8:27b, 5 s per call</div>
+      </div>
+      <div class="mini" id="m2" style="left:1280px">
+        <div class="mshot" data-mini="neo4j"><div class="mfb"></div></div>
+        <div class="mname" data-logo="neo4j"><div class="word">Neo4j</div></div>
+        <div class="mrole">Commits only verified rows</div>
+        <div class="mstat">$18.1M at risk, in Cypher</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="caption" id="cap0">Daytona runs every candidate offline.</div>
+  <div class="caption" id="cap1">Nosana hosts the private model.</div>
+  <div class="caption" id="cap2">Neo4j holds the risk graph and the agent's memory.</div>
+  <div class="caption" id="cap3">Three sponsors, one closed loop.</div>
+</div>
+<script src="../scene_kit.js"></script>
+<script>
+  window.SCENE = { duration: 12, still: 10.5, title: "Built on Daytona, Nosana and Neo4j" };
+
+  // ---- image resolution: start every candidate load at parse time; the page load event waits for all of them.
+  const imgs = Array.from(document.querySelectorAll("img[data-src]"));
+  imgs.forEach((im) => {
+    im.onload = () => { im.dataset.ok = "1"; };
+    im.onerror = () => { im.dataset.ok = "0"; };
+    im.src = im.getAttribute("data-src");
+  });
+  const firstOk = (box) => Array.from(box.querySelectorAll("img")).find((im) => im.dataset.ok === "1" && im.naturalWidth > 0);
+
+  // Neo4j fallback graph (real data, real weights)
+  const NN = [
+    { id: "Quartz", x: 70, y: 210, c: "--node-t4" }, { id: "Zeiss", x: 240, y: 210, c: "--node-t3" },
+    { id: "ASML", x: 410, y: 210, c: "--node-t2" }, { id: "TSMC", x: 580, y: 210, c: "--node-t1" },
+    { id: "NVIDIA", x: 790, y: 110, c: "--node-holding" }, { id: "Apple", x: 790, y: 320, c: "--node-holding" },
+  ];
+  const NE = [[0, 1, "0.98", 1], [1, 2, "0.95", 1], [2, 3, "0.92", 1], [3, 4, "1.0", 1], [3, 5, "0.88", 0]];
+  const SVGNS = "http://www.w3.org/2000/svg";
+  const mk = (tag, attrs, parent) => { const e = document.createElementNS(SVGNS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); parent.appendChild(e); return e; };
+  const ge = document.getElementById("neoedges"), gn = document.getElementById("neonodes");
+  NE.forEach(([a, b, w, hot], i) => {
+    const A = NN[a], B = NN[b];
+    const p = mk("path", { d: `M ${A.x} ${A.y} L ${B.x} ${B.y}`, fill: "none", "stroke-width": hot ? 6 : 3, "stroke-linecap": "round", class: "ne", "data-i": i }, ge);
+    p.style.stroke = hot ? "var(--accent)" : "var(--rule)";
+    const tx = mk("text", { x: (A.x + B.x) / 2, y: (A.y + B.y) / 2 - 16, "text-anchor": "middle", "font-size": 22, class: "nw" }, ge);
+    tx.textContent = w; tx.style.fill = "var(--ink-2)"; tx.style.fontFamily = "var(--font-mono)";
+  });
+  NN.forEach((n) => {
+    const c = mk("circle", { cx: n.x, cy: n.y, r: 26, class: "nn" }, gn); c.style.fill = `var(${n.c})`;
+    const tx = mk("text", { x: n.x, y: n.y + 58, "text-anchor": "middle", "font-size": 22 }, gn);
+    tx.textContent = n.id; tx.style.fill = "var(--ink)"; tx.style.fontFamily = "var(--font-body)";
+  });
+  const res = mk("text", { x: 440, y: 400, "text-anchor": "middle", "font-size": 26, id: "neores" }, gn);
+  res.style.fill = "var(--accent)"; res.style.fontFamily = "var(--font-mono)";
+  res.textContent = "0.98 x 0.95 x 0.92 x 1.0 = 0.8565, $10,706,500";
+
+  // mini fallbacks for the final row
+  const MINI_FB = {
+    daytona: ["network_block_all=True", "<span class='bad'>exit 1</span>  ValueError '1.5M'", "<span class='good'>exit 0</span>  reward 1.0", "6 sandboxes  <span class='good'>4.9 s</span>"],
+    nosana: ["qwen3.8:27b", "RTX 5090, 32 GB", "forward  <span class='good'>5.4 s</span>", "evolved  <span class='good'>5 / 5</span>"],
+    neo4j: ["MERGE (e:Entity {id: row.id})", "reduce(c = 1.0, ...)", "NVIDIA  <span class='risk'>$10,706,500</span>", "Apple   <span class='risk'>$7,386,628</span>"],
+  };
+
+  let resolved = false;
+  function resolveMedia() {
+    if (resolved) return; resolved = true;
+    // big shots
+    document.querySelectorAll(".shot-inner").forEach((box) => {
+      const im = firstOk(box);
+      if (im) { im.classList.add("use"); } else { box.querySelector(".fallback").classList.add("use"); }
+      box.dataset.chosen = im ? im.getAttribute("data-src") : "";
+    });
+    // logos
+    document.querySelectorAll(".logo").forEach((box) => {
+      const im = firstOk(box);
+      if (im) im.classList.add("use"); else box.querySelector(".word").classList.add("use");
+      box.dataset.chosen = im ? im.getAttribute("data-src") : "";
+    });
+    // final row: reuse the chosen shot + logo
+    ["daytona", "nosana", "neo4j"].forEach((k) => {
+      const big = document.querySelector(`.shot-inner[data-shots="${k}"]`);
+      const mini = document.querySelector(`.mshot[data-mini="${k}"]`);
+      if (big.dataset.chosen) {
+        const im = document.createElement("img"); im.src = big.dataset.chosen; im.className = "use"; im.alt = k; mini.appendChild(im);
+      } else {
+        const fb = mini.querySelector(".mfb"); fb.classList.add("use");
+        fb.innerHTML = MINI_FB[k].map((l) => `<div class="fb-line">${l}</div>`).join("");
+      }
+      const logoBox = document.querySelector(`.logo[data-logo="${k}"]`);
+      const mname = document.querySelector(`.mname[data-logo="${k}"]`);
+      if (logoBox.dataset.chosen) {
+        const im = document.createElement("img"); im.src = logoBox.dataset.chosen; im.className = "use"; im.alt = k + " logo"; mname.insertBefore(im, mname.firstChild);
+      } else { mname.querySelector(".word").classList.add("use"); }
+    });
+  }
+
+  const SEG = [{ s: 0.0, e: 3.5 }, { s: 3.5, e: 7.0 }, { s: 7.0, e: 9.95 }];
+  const DRIFT = [[-1.6, -1.0], [1.4, -1.2], [-1.2, 1.0]];
+
+  function segState(t, i) {
+    const { s, e } = SEG[i];
+    const inP = i === 0 ? K.ep(t, 0.15, 0.6) : K.ep(t, s - 0.05, 0.55);
+    const outP = K.ep(t, e - 0.35, 0.35, "inOutCubic");
+    return { op: inP * (1 - outP), x: (1 - inP) * 70 - outP * 70 };
+  }
+
+  window.render = (t) => {
+    resolveMedia();
+    // camera: very slow push
+    K.css(K.$("#cam"), { transform: `scale(${1 + 0.02 * K.ep(t, 0, 12, "linear")})` });
+    K.css(K.$("#head"), K.enter(t, 0.0, 0.5, 16));
+    K.css(K.$("#headrule"), { width: 560 * K.ep(t, 0.2, 0.8) + "px" });
+
+    for (let i = 0; i < 3; i++) {
+      const seg = K.$("#seg" + i), st = segState(t, i);
+      K.css(seg, { opacity: String(st.op), transform: `translateX(${st.x}px)` });
+      const { s, e } = SEG[i];
+      const p = K.ep(t, s, e - s + 0.4, "inOutCubic");
+      const [dx, dy] = DRIFT[i];
+      K.css(seg.querySelector(".shot-inner"), { transform: `scale(${1 + 0.06 * p}) translate(${dx * p}%, ${dy * p}%)` });
+      K.css(seg.querySelector(".logo"), K.enter(t, s + 0.25, 0.5, 18));
+      K.css(seg.querySelector(".role"), K.enter(t, s + 0.4, 0.5, 14));
+      K.css(seg.querySelector(".srule"), { width: 620 * K.ep(t, s + 0.45, 0.6) + "px" });
+      seg.querySelectorAll(".cl").forEach((cl, j) => {
+        const start = s + 0.7 + j * 0.62;
+        const full = cl.getAttribute("data-text");
+        const shown = K.type(full, t, start, 70);
+        const typing = t >= start && shown.length < full.length;
+        cl.innerHTML = "";
+        cl.textContent = shown;
+        if (typing) { const c = document.createElement("span"); c.className = "cursor"; cl.appendChild(c); }
+        cl.classList.toggle("on", shown.length === full.length && full.length > 0);
+        K.css(cl, { opacity: String(K.ep(t, start - 0.1, 0.25)) });
+      });
+    }
+
+    // Neo4j fallback: path lights up along the chain
+    document.querySelectorAll("#neoedges .ne").forEach((p, i) => {
+      const hot = p.getAttribute("stroke-width") === "6";
+      if (hot) K.draw(p, K.ep(t, 7.5 + i * 0.25, 0.35)); else K.draw(p, K.ep(t, 7.3, 0.4));
+    });
+    K.css(K.$("#neores"), { opacity: String(K.ep(t, 8.7, 0.4)) });
+
+    // final row
+    const rowIn = K.ep(t, 9.8, 0.45);
+    K.css(K.$("#row"), { opacity: String(rowIn) });
+    [0, 1, 2].forEach((i) => {
+      const p = K.ep(t, 9.8 + i * 0.08, 0.5, "outBack");
+      K.css(K.$("#m" + i), { transform: `translateY(${(1 - p) * 60}px) scale(${0.94 + 0.06 * p})`, opacity: String(K.ep(t, 9.8 + i * 0.08, 0.35)) });
+    });
+    K.draw(K.$("#lw1"), K.ep(t, 10.0, 0.25)); K.draw(K.$("#lw2"), K.ep(t, 10.08, 0.25));
+    K.draw(K.$("#lwb"), K.ep(t, 10.05, 0.4, "inOutCubic"));
+    K.css(K.$("#lwbh"), { opacity: String(K.ep(t, 10.4, 0.1)) });
+    // sparks travelling around the loop after it is drawn
+    const g = K.$("#lsparks"); g.innerHTML = "";
+    if (t > 10.45) {
+      const back = K.$("#lwb");
+      for (let k = 0; k < 3; k++) {
+        const ph = ((t - 10.45) * 0.55 + k / 3) % 1;
+        const pt = K.along(back, ph);
+        const c = document.createElementNS(SVGNS, "circle");
+        c.setAttribute("cx", pt.x); c.setAttribute("cy", pt.y); c.setAttribute("r", 8); c.setAttribute("class", "spark");
+        g.appendChild(c);
+      }
+    }
+
+    // captions
+    K.css(K.$("#cap0"), K.enter(t, 0.3, 0.5, 14, 3.2, 0.3));
+    K.css(K.$("#cap1"), K.enter(t, 3.6, 0.5, 14, 6.7, 0.3));
+    K.css(K.$("#cap2"), K.enter(t, 7.1, 0.5, 14, 9.6, 0.3));
+    K.css(K.$("#cap3"), K.enter(t, 10.0, 0.4, 14));
+    // head fades while the row takes over its space
+    K.css(K.$("#head"), { opacity: String(K.ep(t, 0, 0.5) * (1 - 0.0 * rowIn)) });
+  };
+</script>
+</body>
+</html>
